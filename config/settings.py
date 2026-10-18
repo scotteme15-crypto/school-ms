@@ -176,10 +176,14 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}
-    if not DEBUG
-    else {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    # Non-manifest storage: no collectstatic-generated staticfiles.json is
+    # required, so ``{% static %}`` never raises for a missing manifest entry.
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
+
+# Serve files straight from STATICFILES_DIRS / app static folders so static
+# assets work even when collectstatic is not run during the build.
+WHITENOISE_USE_FINDERS = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
