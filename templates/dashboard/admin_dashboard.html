@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ greeting }}, {{ user.display_name|truncatechars:24 }}</h1>
+    <p>{{ period.year }}, {{ period.semester }}.
+      {% if kpis.pending %}<b>{{ kpis.pending }} result sheet{{ kpis.pending|pluralize }}</b> are waiting for your review.
+      {% else %}No result sheets are waiting for review.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'reports:index' %}">{% icon 'file' 15 %} Reports</a>
+    <a class="btn primary" href="{% url 'results:approvals' %}">{% icon 'checkc' 15 %} Review results</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Students enrolled" v=kpis.students_active icon="users" trend="Active on the roll" %}
+  {% include 'includes/stat.html' with k="Teaching staff" v=kpis.teachers_active icon="cap" tone="info" trend="Active on the payroll" %}
+  {% include 'includes/stat.html' with k="Class sections" v=kpis.classes icon="school" tone="brass" trend="Grades 7 to 12" %}
+  {% include 'includes/stat.html' with k="Subjects offered" v=kpis.subjects icon="book" tone="ok" trend="Across all grades" %}
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Present today" v=kpis.present_today icon="check" tone="ok" trend="Marked in the register" %}
+  {% include 'includes/stat.html' with k="Absent today" v=kpis.absent_today icon="warn" tone="bad" trend="Includes late and excused" %}
+  {% include 'includes/stat.html' with k="Results pending" v=kpis.pending icon="clock" tone="warn" trend="Awaiting your decision" %}
+  {% include 'includes/stat.html' with k="Exams upcoming" v=kpis.exams_upcoming icon="scroll" tone="brass" trend="See the exam calendar" %}
+</div>
+
+<div class="grid g-32" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Enrolment by grade</h2><span class="sub">Active students only</span></div>
+    <div class="panel-body"><div data-chart="{{ enrol_json }}" data-chart-type="bar" data-chart-height="210"></div></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Gender split</h2></div>
+    <div class="panel-body">
+      <div data-chart="{{ gender_json }}" data-chart-type="donut"></div>
+      <div class="legend">
+        {% for s in gender_segments %}<span><i style="background:{{ s.color }}"></i>{{ s.label }} · {{ s.value }}</span>{% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="grid g-2" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Attendance, last 10 school days</h2><span class="sub">Whole school</span></div>
+    <div class="panel-body"><div data-chart="{{ att_series_json }}" data-chart-type="line" data-chart-height="215" data-chart-unit="%"></div></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Average score by grade</h2><span class="sub">Approved results</span></div>
+    <div class="panel-body"><div data-chart="{{ perf_json }}" data-chart-type="bar" data-chart-height="215"></div></div>
+  </section>
+</div>
+
+<div class="grid g-23" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Result sheets</h2><span class="sub">{{ kpis.sheets_total }} submitted this semester</span></div>
+    <div class="panel-body">
+      <div data-chart="{{ sheet_json }}" data-chart-type="donut"></div>
+      <div class="legend">
+        {% for s in sheet_segments %}<span><i style="background:{{ s.color }}"></i>{{ s.label }} · {{ s.value }}</span>{% endfor %}
+      </div>
+      <a class="btn block" style="margin-top:14px" href="{% url 'results:approvals' %}">Open approval centre</a>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Quick actions</h2></div>
+    <div class="panel-body"><div class="qa">
+      <a class="btn" href="{% url 'students:list' %}" style="flex-direction:column">{% icon 'plus' 18 %} Add student</a>
+      <a class="btn" href="{% url 'teachers:list' %}" style="flex-direction:column">{% icon 'cap' 18 %} Add teacher</a>
+      <a class="btn" href="{% url 'academics:class_list' %}" style="flex-direction:column">{% icon 'school' 18 %} Create class</a>
+      <a class="btn" href="{% url 'academics:subject_list' %}" style="flex-direction:column">{% icon 'book' 18 %} Add subject</a>
+      <a class="btn" href="{% url 'results:approvals' %}" style="flex-direction:column">{% icon 'checkc' 18 %} Review results</a>
+      <a class="btn" href="{% url 'announcements:list' %}" style="flex-direction:column">{% icon 'mega' 18 %} Post a notice</a>
+      <a class="btn" href="{% url 'reports:index' %}" style="flex-direction:column">{% icon 'file' 18 %} Build a report</a>
+      <a class="btn" href="{% url 'academics:exam_list' %}" style="flex-direction:column">{% icon 'scroll' 18 %} Schedule exam</a>
+    </div></div>
+  </section>
+</div>
+
+<div class="grid g-2">
+  <section class="panel">
+    <div class="panel-head"><h2>Recent activity</h2><div class="right"><a class="btn sm ghost" href="{% url 'audit:list' %}">Full log</a></div></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for a in activity %}
+        <div class="feed"><span class="dotic">{% icon 'act' 15 %}</span>
+          <div style="min-width:0"><p><b>{{ a.user_name|default:"System" }}</b> · {{ a.description }}</p>
+          <time>{{ a.created_at|timesince }} ago · {{ a.module }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">No activity recorded yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Coming up</h2><div class="right"><a class="btn sm ghost" href="{% url 'announcements:event_list' %}">Calendar</a></div></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for e in events %}
+        <div class="feed"><span class="dotic">{% icon 'cal' 15 %}</span>
+          <div style="min-width:0"><p>{{ e.title }}</p><time>{{ e.date|date:"d M Y" }} · {{ e.location }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">Nothing scheduled.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

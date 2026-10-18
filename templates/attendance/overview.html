@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Attendance{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Attendance</h1>
+    <p>Whole-school registers, per-class coverage and overall attendance rate.</p>
+  </div>
+  <div class="page-actions no-print">
+    <a class="btn" href="{% url 'attendance:entry' %}">{% icon 'check' 15 %} Take a register</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Attendance rate" v=kpis.overall_pct icon="trend" tone="ok" trend="Present and late" %}
+  {% include 'includes/stat.html' with k="Records" v=kpis.total_records icon="clip" trend="Entries across all sessions" %}
+  {% include 'includes/stat.html' with k="Sessions" v=kpis.sessions icon="cal" tone="info" trend="Class registers taken" %}
+  {% include 'includes/stat.html' with k="Absences" v=kpis.absent icon="warn" tone="bad" trend="Marked absent" %}
+</div>
+
+<div class="grid g-2" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Status breakdown</h2><span class="sub">All records</span></div>
+    <div class="panel-body">
+      <div data-chart="{{ donut_json }}" data-chart-type="donut"></div>
+      <div class="legend">
+        {% for s in segments %}<span><i style="background:{{ s.color }}"></i>{{ s.label }} · {{ s.value }}</span>{% endfor %}
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Attendance trend</h2><span class="sub">Last 10 school days</span></div>
+    <div class="panel-body"><div data-chart="{{ trend_json }}" data-chart-type="line" data-chart-height="215" data-chart-unit="%"></div></div>
+  </section>
+</div>
+
+<section class="panel" style="margin-bottom:16px">
+  <div class="panel-head"><h2>By class</h2></div>
+  <div class="tablewrap"><table class="dt">
+    <thead><tr><th>Class</th><th class="num">Students</th><th class="num">Sessions</th><th class="num">Records</th><th class="num">Present</th><th class="num">Rate</th></tr></thead>
+    <tbody>
+      {% for c in per_class %}
+        <tr>
+          <td><b>{{ c.name }}</b></td>
+          <td class="num">{{ c.students }}</td>
+          <td class="num">{{ c.sessions }}</td>
+          <td class="num">{{ c.total }}</td>
+          <td class="num">{{ c.present }}</td>
+          <td class="num">{{ c.pct }}%</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" style="color:var(--tx-3)">No classes configured yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Recent sessions</h2></div>
+  <div class="tablewrap"><table class="dt">
+    <thead><tr><th>Date</th><th>Class</th><th>Teacher</th><th class="num">Records</th><th class="num">Actions</th></tr></thead>
+    <tbody>
+      {% for s in recent %}
+        <tr>
+          <td>{{ s.date|date:"d M Y" }}</td>
+          <td><b>{{ s.school_class.name }}</b></td>
+          <td>{{ s.teacher.name|default:"—" }}</td>
+          <td class="num">{{ s.records.count }}</td>
+          <td class="num">
+            <form method="post" action="{% url 'attendance:session_delete' s.pk %}" style="display:inline"
+                  data-confirm="Delete this attendance session and all its records?" data-confirm-title="Delete session"
+                  data-confirm-action="Delete">
+              {% csrf_token %}
+              <button class="btn sm danger" type="submit">{% icon 'trash' 14 %}</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" style="color:var(--tx-3)">No registers have been taken yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ student.full_name }}</h1>
+    <p>{{ student.student_id }} · Grade {{ student.grade }} {{ student.section }}{% if student.school_class %} · {{ student.school_class.name }}{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'students:list' %}">{% icon 'users' 15 %} All students</a>
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn" href="{% url 'students:edit' student.pk %}">{% icon 'edit' 15 %} Edit</a>
+      <a class="btn danger" href="{% url 'students:delete' student.pk %}">{% icon 'trash' 15 %} Delete</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid g-23">
+  <section class="panel">
+    <div class="panel-head"><h2>Enrolment</h2></div>
+    <div class="panel-body">
+      <dl class="kv">
+        <dt>Student ID</dt><dd>{{ student.student_id }}</dd>
+        <dt>Grade</dt><dd>Grade {{ student.grade }}</dd>
+        <dt>Section</dt><dd>{{ student.get_section_display }}</dd>
+        <dt>Class</dt><dd>{{ student.school_class.name|default:"Not assigned" }}</dd>
+        <dt>Status</dt><dd>{% person_badge student.status %}</dd>
+        <dt>Gender</dt><dd>{{ student.get_gender_display }}</dd>
+        <dt>Date of birth</dt><dd>{{ student.date_of_birth|date:"d M Y"|default:"—" }}</dd>
+        <dt>Admission date</dt><dd>{{ student.admission_date|date:"d M Y"|default:"—" }}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Contact</h2></div>
+    <div class="panel-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        {% avatar student.full_name 'lg' %}
+        <div style="min-width:0">
+          <b style="font-size:15px">{{ student.full_name }}</b>
+          <div style="color:var(--tx-3);font-size:12.5px">{{ student.student_id }}</div>
+          {% person_badge student.status %}
+        </div>
+      </div>
+      <dl class="kv">
+        <dt>Guardian</dt><dd>{{ student.parent_name|default:"—" }}</dd>
+        <dt>Guardian phone</dt><dd>{{ student.parent_phone|default:"—" }}</dd>
+        <dt>Email</dt><dd>{{ student.email|default:"—" }}</dd>
+        <dt>Address</dt><dd>{{ student.address|default:"—" }}</dd>
+      </dl>
+    </div>
+  </section>
+</div>
+{% endblock %}

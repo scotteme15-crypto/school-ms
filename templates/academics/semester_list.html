@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Semesters{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Semesters</h1><p>Terms within each academic year used for results and reports.</p></div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'academics:year_list' %}">{% icon 'cal' 15 %} Academic years</a>
+    <a class="btn primary" href="{% url 'academics:semester_create' %}">{% icon 'plus' 15 %} New semester</a>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr><th>Semester</th><th>Academic year</th><th class="num">Order</th><th>Starts</th><th>Ends</th><th>Current</th></tr>
+      </thead>
+      <tbody>
+        {% for s in page_obj %}
+          <tr>
+            <td><b>{{ s.name }}</b></td>
+            <td>{{ s.academic_year.name }}</td>
+            <td class="num">{{ s.order }}</td>
+            <td>{{ s.start_date|date:"d M Y"|default:"—" }}</td>
+            <td>{{ s.end_date|date:"d M Y"|default:"—" }}</td>
+            <td>{% if s.is_current %}<span class="badge ok">Current</span>{% else %}<span class="badge">—</span>{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6"><div class="empty"><div class="ring">{% icon 'cal' 22 %}</div><h3>No semesters</h3><p>Create a semester within an academic year.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

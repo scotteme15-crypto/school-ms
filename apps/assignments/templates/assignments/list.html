@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Assignments{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Assignments</h1>
+    <p>
+      {% if can_manage %}Work issued across your classes.{% else %}Work set for your class.{% endif %}
+      Overdue items are flagged automatically.
+    </p>
+  </div>
+  <div class="page-actions">
+    {% if can_manage %}
+      <a class="btn primary" href="{% url 'assignments:create' %}">{% icon 'plus' 15 %} New assignment</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Class</th>
+          <th>Subject</th>
+          <th>Due</th>
+          <th class="num">Out of</th>
+          <th>Teacher</th>
+          <th>Status</th>
+          <th class="acts"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in page_obj %}
+        <tr>
+          <td><b>{{ a.title }}</b></td>
+          <td>{{ a.school_class.name }}</td>
+          <td>{{ a.subject.name }}</td>
+          <td>{{ a.due_date|date:"d M Y" }}</td>
+          <td class="num">{{ a.max_mark|num }}</td>
+          <td>{{ a.teacher.name|default:"—" }}</td>
+          <td>{% if a.is_overdue %}<span class="badge bad"><span class="d"></span>Overdue</span>{% else %}<span class="badge ok"><span class="d"></span>Open</span>{% endif %}</td>
+          <td class="acts">
+            {% if a.can_edit %}
+              <a class="btn sm ghost" href="{% url 'assignments:edit' a.pk %}">{% icon 'edit' 13 %} Edit</a>
+              <form method="post" action="{% url 'assignments:delete' a.pk %}" style="display:inline">
+                {% csrf_token %}
+                <button class="btn sm danger" type="submit" onclick="return confirm('Delete this assignment?')">{% icon 'trash' 13 %}</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">
+          <div class="empty">
+            {% icon 'pencil' 24 %}
+            <h3>No assignments yet</h3>
+            <p>{% if can_manage %}Create the first assignment for your classes.{% else %}Your teachers have not posted any assignments yet.{% endif %}</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

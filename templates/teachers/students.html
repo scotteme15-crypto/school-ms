@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}My students{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>My students</h1><p>Students across the classes you teach.</p></div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'teachers:my_classes' %}">{% icon 'school' 15 %} My classes</a>
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="search-inp">{% icon 'search' 15 %}<input type="search" name="q" value="{{ q }}" placeholder="Search name or student ID…"></div>
+    <div class="field" style="min-width:140px">
+      <select name="grade">
+        <option value="">All grades</option>
+        {% for value, label in grade_choices %}<option value="{{ value }}" {% if grade == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:130px">
+      <select name="section">
+        <option value="">All sections</option>
+        {% for value, label in section_choices %}<option value="{{ value }}" {% if section == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:150px">
+      <select name="class">
+        <option value="">All my classes</option>
+        {% for c in classes %}<option value="{{ c.pk }}" {% if class_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn sm primary" type="submit">{% icon 'filter' 14 %} Filter</button>
+    {% if q or grade or section or class_id %}<a class="btn sm ghost" href="{% url 'teachers:students' %}">{% icon 'x' 14 %} Clear</a>{% endif %}
+  </form>
+
+  <div class="tablewrap">
+    <table class="dt">
+      <thead><tr><th>Student</th><th>Class</th><th>Grade</th><th>Gender</th><th>Guardian</th><th>Status</th><th class="acts">Actions</th></tr></thead>
+      <tbody>
+        {% for s in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar s.full_name %}<div><b>{{ s.full_name }}</b><span>{{ s.student_id }}</span></div></div></td>
+            <td>{{ s.school_class.name|default:"—" }}</td>
+            <td>Grade {{ s.grade }} {{ s.section }}</td>
+            <td>{{ s.get_gender_display }}</td>
+            <td>{{ s.parent_name|default:"—" }}{% if s.parent_phone %}<br><span style="color:var(--tx-3);font-size:12px">{{ s.parent_phone }}</span>{% endif %}</td>
+            <td>{% person_badge s.status %}</td>
+            <td class="acts"><a class="rowbtn" href="{% url 'students:detail' s.pk %}" title="View">{% icon 'eye' 15 %}</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="empty"><div class="ring">{% icon 'users' 22 %}</div><h3>No students found</h3><p>You have no students in the selected classes.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

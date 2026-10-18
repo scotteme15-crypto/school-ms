@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Take attendance{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Take attendance</h1>
+    <p>{% if school_class %}{{ school_class.name }} · {{ date|date:"d M Y" }}{% else %}Pick a class and date to open the register.{% endif %}</p>
+  </div>
+  <div class="page-actions no-print">
+    <a class="btn ghost" href="{% url 'teachers:my_classes' %}">{% icon 'school' 15 %} My classes</a>
+  </div>
+</div>
+
+<section class="panel" style="margin-bottom:16px">
+  <div class="panel-head"><h2>Register</h2><span class="sub">One session per class and date</span></div>
+  <div class="panel-body">
+    <form class="toolbar no-print" method="get">
+      {{ filter_form.school_class }}
+      {{ filter_form.date }}
+      <noscript><button class="btn sm" type="submit">{% icon 'search' 14 %} Load</button></noscript>
+    </form>
+
+    {% if not school_class %}
+      <div class="note info">{% icon 'info' 17 %}
+        <div><b>Choose a class</b><p style="margin:3px 0 0">Select a class above to list its active students and mark the register.</p></div>
+      </div>
+    {% elif not rows %}
+      <div class="empty">{% icon 'users' 24 %}<h3>No active students</h3>
+        <p>{{ school_class.name }} has no active students to mark.</p></div>
+    {% else %}
+      <form method="post" data-attendance-form>
+        {% csrf_token %}
+        <input type="hidden" name="school_class" value="{{ school_class.pk }}">
+        <input type="hidden" name="date" value="{{ date|date:'Y-m-d' }}">
+
+        <div class="toolbar no-print" style="margin-bottom:12px">
+          <span style="color:var(--tx-3);font-size:13px">Mark all:</span>
+          <button class="btn sm" type="button" data-set-all="present">{% icon 'check' 14 %} Present</button>
+          <button class="btn sm" type="button" data-set-all="absent">{% icon 'warn' 14 %} Absent</button>
+          <button class="btn sm" type="button" data-set-all="late">{% icon 'clock' 14 %} Late</button>
+          <button class="btn sm" type="button" data-set-all="excused">{% icon 'info' 14 %} Excused</button>
+        </div>
+
+        <div class="tablewrap"><table class="dt">
+          <thead><tr><th>Student</th><th>ID</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td><b>{{ row.student.full_name }}</b></td>
+                <td>{{ row.student.student_id }}</td>
+                <td style="max-width:220px">{{ row.field }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table></div>
+
+        <div class="page-actions" style="margin-top:16px">
+          <button class="btn primary" type="submit">{% icon 'check' 15 %} Save register</button>
+        </div>
+      </form>
+
+      {% if session %}
+        <div class="note ok" style="margin-top:14px">{% icon 'checkc' 17 %}
+          <div><b>Register already saved for {{ date|date:"d M Y" }}.</b>
+            <p style="margin:3px 0 0">Present {{ counts.present }} · Absent {{ counts.absent }} · Late {{ counts.late }} · Excused {{ counts.excused }}. Saving again updates these records.</p></div>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

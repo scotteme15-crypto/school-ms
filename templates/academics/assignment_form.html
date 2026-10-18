@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}New teaching assignment{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>New teaching assignment</h1><p>Link a teacher to a subject and class for a given academic year.</p></div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'academics:assignment_list' %}">{% icon 'x' 15 %} Cancel</a>
+  </div>
+</div>
+
+<section class="panel" style="max-width:720px">
+  <div class="panel-head"><h2>Assignment details</h2></div>
+  <div class="panel-body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="note warn" style="margin-bottom:14px">{% icon 'warn' 16 %} {{ form.non_field_errors.0 }}</div>{% endif %}
+      <div class="grid g-2">
+        {% for field in form %}
+          <div class="field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="note info" style="margin-top:16px">{% icon 'info' 16 %} A subject can only be assigned to a class of the same grade.</div>
+      <div style="display:flex;gap:9px;margin-top:16px">
+        <button class="btn primary" type="submit">{% icon 'check' 15 %} Create assignment</button>
+        <a class="btn ghost" href="{% url 'academics:assignment_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ sheet.subject.name }} — {{ sheet.school_class.name }}</h1>
+    <p>{{ sheet.get_exam_type_display }} · {{ sheet.semester.name }}, {{ sheet.academic_year.name }} · {% status_badge sheet.status %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'results:list' %}">{% icon 'right' 15 %} Result sheets</a>
+    {% if is_admin %}<a class="btn ghost" href="{% url 'results:approvals' %}">{% icon 'checkc' 15 %} Approvals</a>{% endif %}
+    {% if can_edit %}
+      <a class="btn primary" href="{% url 'results:entry' %}?sheet={{ sheet.pk }}">{% icon 'pencil' 15 %} Edit marks</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if sheet.reason %}
+  <div class="note {% if sheet.status == 'rejected' %}warn{% else %}info{% endif %}" style="margin-bottom:16px">{% icon 'info' 17 %}
+    <div><b>{{ sheet.get_status_display }}{% if sheet.decided_by %} by {{ sheet.decided_by.display_name }}{% endif %}</b>
+      <p style="margin:3px 0 0">{{ sheet.reason }}</p></div>
+  </div>
+{% endif %}
+
+<div class="grid g-32" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Marks</h2><span class="sub">{{ rows|length }} student{{ rows|length|pluralize }} · {{ components|length }} component{{ components|length|pluralize }}</span></div>
+    <div class="tablewrap"><table class="dt">
+      <thead><tr>
+        <th>Student</th>
+        {% for c in components %}<th class="num">{{ c.label }}</th>{% endfor %}
+        <th class="num">Total</th><th class="num">%</th><th class="num">Grade</th><th>Remark</th>
+      </tr></thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td><b>{{ row.student.full_name }}</b><div class="sub">{{ row.student.student_id }}</div></td>
+            {% for c in components %}<td class="num">{{ row.breakdown|dict_get:c.pk|default_if_none:"—" }}</td>{% endfor %}
+            <td class="num">{{ row.total|num }}</td>
+            <td class="num">{{ row.percentage|pct }}</td>
+            <td class="num">{{ row.grade }}</td>
+            <td>{{ row.remark|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="{{ components|length|add:4 }}"><div class="empty">{% icon 'clip' 24 %}<h3>No marks recorded</h3><p>No marks have been captured for this sheet yet.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <div>
+    <section class="panel" style="margin-bottom:16px">
+      <div class="panel-head"><h2>Sheet details</h2></div>
+      <div class="panel-body" style="padding-top:4px">
+        <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Teacher</p><p><b>{{ sheet.teacher.name|default:"—" }}</b></p></div></div>
+        <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Class</p><p><b>{{ sheet.school_class.name }}</b></p></div></div>
+        <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Subject</p><p><b>{{ sheet.subject.name }}</b></p></div></div>
+        <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Exam type</p><p><b>{{ sheet.get_exam_type_display }}</b></p></div></div>
+        <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Submitted</p><p><b>{{ sheet.submitted_at|date:"d M Y, H:i"|default:"—" }}</b></p></div></div>
+        <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Decided</p><p><b>{{ sheet.decided_at|date:"d M Y, H:i"|default:"—" }}</b></p></div></div>
+      </div>
+    </section>
+
+    {% if can_decide %}
+      <section class="panel" style="margin-bottom:16px">
+        <div class="panel-head"><h2>Decision</h2><span class="sub">Registrar</span></div>
+        <div class="panel-body">
+          <form method="post" action="{% url 'results:approve' sheet.pk %}" style="margin-bottom:14px"
+                data-confirm="Approve and publish these marks to students?" data-confirm-title="Approve results"
+                data-confirm-action="Approve" data-confirm-danger="false">
+            {% csrf_token %}
+            <button class="btn primary block" type="submit">{% icon 'checkc' 15 %} Approve &amp; publish</button>
+          </form>
+          <form method="post" action="{% url 'results:return_sheet' sheet.pk %}">
+            {% csrf_token %}
+            <div class="field" style="margin-bottom:12px">
+              <label for="reason">Return or reject with a reason</label>
+              <textarea id="reason" name="reason" rows="3" placeholder="Explain what the teacher needs to correct" required></textarea>
+            </div>
+            <div class="field" style="margin-bottom:12px">
+              <label for="decision">Decision</label>
+              <select id="decision" name="decision">
+                <option value="returned">Return for correction</option>
+                <option value="rejected">Reject</option>
+              </select>
+            </div>
+            <button class="btn block" type="submit">{% icon 'refresh' 15 %} Send back to teacher</button>
+          </form>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if can_edit %}
+      <section class="panel" style="margin-bottom:16px">
+        <div class="panel-head"><h2>Submit</h2></div>
+        <div class="panel-body">
+          <form method="post" action="{% url 'results:submit' sheet.pk %}"
+                data-confirm="Submit this sheet for approval? You will not be able to edit it until it is returned."
+                data-confirm-title="Submit for approval" data-confirm-action="Submit" data-confirm-danger="false">
+            {% csrf_token %}
+            <button class="btn primary block" type="submit">{% icon 'upload' 15 %} Submit for approval</button>
+          </form>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if is_admin or can_edit %}
+      <section class="panel">
+        <div class="panel-head"><h2>Danger zone</h2></div>
+        <div class="panel-body">
+          <form method="post" action="{% url 'results:delete' sheet.pk %}" style="display:inline"
+                data-confirm="Delete this result sheet and all its marks? This cannot be undone."
+                data-confirm-title="Delete result sheet" data-confirm-action="Delete">
+            {% csrf_token %}
+            <button class="btn danger block" type="submit">{% icon 'trash' 15 %} Delete sheet</button>
+          </form>
+        </div>
+      </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

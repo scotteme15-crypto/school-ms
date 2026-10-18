@@ -1,0 +1,13 @@
+{% extends 'registration/_auth.html' %}
+{% load ui %}
+{% block title %}Page not found{% endblock %}
+{% block card %}
+<div style="text-align:center">
+  <div class="empty" style="padding:0 0 16px">
+    <div class="ring" style="margin:0 auto 14px">{% icon 'search' 22 %}</div>
+    <h3>404 · Page not found</h3>
+    <p style="margin:0 auto">{{ message }}</p>
+  </div>
+  <a class="btn primary block" href="{% url 'dashboard' %}">Back to dashboard</a>
+</div>
+{% endblock %}

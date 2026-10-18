@@ -1,0 +1,6 @@
+{% load ui %}
+{% if messages %}
+<div class="no-print" style="position:absolute;left:-9999px" aria-live="polite">
+  {% for message in messages %}<div>{{ message.tags }}: {{ message }}</div>{% endfor %}
+</div>
+{% endif %}

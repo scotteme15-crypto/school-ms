@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Classes{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Classes</h1><p>Every grade and section in the school, with enrolment and homeroom staff.</p></div>
+  <div class="page-actions">
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn primary" href="{% url 'academics:class_create' %}">{% icon 'plus' 15 %} New class</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="search-inp">{% icon 'search' 15 %}<input type="search" name="q" value="{{ q }}" placeholder="Search by room or homeroom teacher…"></div>
+    <div class="field" style="min-width:150px">
+      <select name="grade">
+        <option value="">All grades</option>
+        {% for value, label in grade_choices %}
+          <option value="{{ value }}" {% if grade == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:150px">
+      <select name="section">
+        <option value="">All sections</option>
+        {% for value, label in section_choices %}
+          <option value="{{ value }}" {% if section == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn sm primary" type="submit">{% icon 'filter' 14 %} Filter</button>
+    {% if q or grade or section %}<a class="btn sm ghost" href="{% url 'academics:class_list' %}">{% icon 'x' 14 %} Clear</a>{% endif %}
+  </form>
+
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Class</th><th>Room</th><th>Homeroom teacher</th>
+          <th class="num">Students</th><th>Academic year</th><th class="acts">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar c.name %}<div><b>{{ c.name }}</b><span>{{ c.get_section_display }}</span></div></div></td>
+            <td>{{ c.room|default:"—" }}</td>
+            <td>{{ c.homeroom_teacher.name|default:"—" }}</td>
+            <td class="num">{{ c.active_count }}</td>
+            <td>{{ c.academic_year.name|default:"—" }}</td>
+            <td class="acts">
+              {% if user.is_admin_role or user.is_superuser %}
+                <a class="rowbtn" href="{% url 'academics:class_edit' c.pk %}" title="Edit">{% icon 'edit' 15 %}</a>
+                <a class="rowbtn del" href="{% url 'academics:class_delete' c.pk %}" title="Delete">{% icon 'trash' 15 %}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6"><div class="empty"><div class="ring">{% icon 'school' 22 %}</div><h3>No classes found</h3><p>Add a class to begin organising students and subjects.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

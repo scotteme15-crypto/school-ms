@@ -1,0 +1,5 @@
+{% load ui %}<div class="stat {{ tone }}">
+  <div class="k">{% if icon %}{% icon icon 15 %}{% endif %}{{ k }}</div>
+  <div class="v">{{ v }}</div>
+  {% if trend %}<div class="t {{ dir }}">{{ trend }}</div>{% endif %}
+</div>

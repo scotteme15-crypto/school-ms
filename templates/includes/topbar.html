@@ -1,0 +1,19 @@
+{% load ui %}
+<header class="topbar">
+  <button class="iconbtn burger no-print" id="openNav" aria-label="Open navigation"></button>
+  <div class="crumbs" id="crumbs">
+    <span class="hidemob">{{ school.school_name }}</span>
+    {% icon 'right' 13 %}
+    <b>{{ page_title|default:"Dashboard" }}</b>
+  </div>
+  <div class="topbar-tools no-print">
+    <button class="searchbtn" id="searchBtn" aria-label="Search the school records">
+      {% icon 'search' 15 %}
+      <span>Search records</span><kbd>Ctrl K</kbd>
+    </button>
+    <button class="iconbtn" id="themeBtn" aria-label="Switch colour theme"></button>
+    <button class="iconbtn" id="bellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+      {% if unread_notification_count %}<span class="dot"></span>{% endif %}
+    </button>
+  </div>
+</header>

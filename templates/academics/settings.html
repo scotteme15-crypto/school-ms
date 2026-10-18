@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}School settings{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>School settings</h1><p>Identity, contacts, the current period and the grading configuration.</p></div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'academics:grading' %}">{% icon 'award' 15 %} Grading scale</a>
+    <a class="btn" href="{% url 'academics:components' %}">{% icon 'grid' 15 %} Assessment components</a>
+  </div>
+</div>
+
+{% if not weights_ok %}
+  <div class="note warn" style="margin-bottom:16px">
+    {% icon 'warn' 16 %} Assessment weights total <b>{{ weights_total|num }}%</b> instead of 100%. Adjust the components below so final grades can be trusted.
+  </div>
+{% endif %}
+
+<div class="grid g-32">
+  <section class="panel">
+    <div class="panel-head"><h2>School profile</h2><span class="sub">Shown on reports and the sign-in screen</span></div>
+    <div class="panel-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="note warn" style="margin-bottom:14px">{% icon 'warn' 16 %} {{ form.non_field_errors.0 }}</div>{% endif %}
+        <div class="grid g-2">
+          {% for field in form %}
+            {% if field.field.widget.input_type == 'checkbox' %}
+              <div class="field" style="flex-direction:row;align-items:center;gap:9px;grid-column:1/-1">
+                {{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              </div>
+            {% else %}
+              <div class="field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<span class="hint">{{ field.help_text }}</span>{% endif %}
+                {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <div style="display:flex;gap:9px;margin-top:18px">
+          <button class="btn primary" type="submit">{% icon 'check' 15 %} Save settings</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <div class="grid" style="gap:16px;align-content:start">
+    <section class="panel">
+      <div class="panel-head"><h2>Grading bands</h2><span class="sub">{{ bands|length }} configured</span></div>
+      <div class="tablewrap">
+        <table class="dt">
+          <thead><tr><th>Letter</th><th class="num">Min</th><th class="num">Point</th></tr></thead>
+          <tbody>
+            {% for b in bands %}
+              <tr><td><b class="grade-{{ b.letter }}">{{ b.letter }}</b></td><td class="num">{{ b.min_score|num }}</td><td class="num">{{ b.point|num }}</td></tr>
+            {% empty %}
+              <tr><td colspan="3"><div class="empty" style="padding:24px"><p>No bands configured yet.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-body" style="border-top:1px solid var(--line-2)">
+        <form method="post" action="{% url 'academics:grading' %}" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="settings">
+          <div class="grid g-2">
+            {% for field in band_form %}
+              <div class="field" {% if field.name == 'remark' %}style="grid-column:1/-1"{% endif %}>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+              </div>
+            {% endfor %}
+          </div>
+          <button class="btn sm primary" type="submit" style="margin-top:12px">{% icon 'plus' 14 %} Add band</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Assessment components</h2><span class="sub">Total weight {{ weights_total|num }}%</span></div>
+      <div class="tablewrap">
+        <table class="dt">
+          <thead><tr><th>Component</th><th class="num">Max</th><th class="num">Weight</th></tr></thead>
+          <tbody>
+            {% for c in components %}
+              <tr><td><div class="idcell"><div><b>{{ c.label }}</b><span>{{ c.key }}</span></div></div></td><td class="num">{{ c.max_score|num }}</td><td class="num">{{ c.weight_percent|num }}%</td></tr>
+            {% empty %}
+              <tr><td colspan="3"><div class="empty" style="padding:24px"><p>No components configured yet.</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-body" style="border-top:1px solid var(--line-2)">
+        <form method="post" action="{% url 'academics:components' %}" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="settings">
+          <div class="grid g-2">
+            {% for field in comp_form %}
+              <div class="field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+              </div>
+            {% endfor %}
+          </div>
+          <button class="btn sm primary" type="submit" style="margin-top:12px">{% icon 'plus' 14 %} Add component</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

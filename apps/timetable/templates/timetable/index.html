@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Timetable{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Timetable</h1>
+    <p>
+      {% if scope == 'teacher' %}Your teaching periods this week.
+      {% elif scope == 'student' %}Your class lessons for the week — Monday to Friday.
+      {% else %}Weekly lesson grid for a selected class.{% endif %}
+    </p>
+  </div>
+  <div class="page-actions">
+    {% if can_manage %}
+      <a class="btn primary" href="{% url 'timetable:slot_create' %}{% if selected_class %}?class={{ selected_class.pk }}{% endif %}">{% icon 'plus' 15 %} Add slot</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  {% if classes %}
+  <form class="toolbar" method="get">
+    <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+      <label for="classPick">Class</label>
+      <select id="classPick" name="class" onchange="this.form.submit()">
+        {% for c in classes %}
+          <option value="{{ c.pk }}" {% if selected_class and c.pk == selected_class.pk %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <noscript><button class="btn sm" type="submit">Show</button></noscript>
+    <span class="sub" style="margin-left:auto">{{ rows|length }} period{{ rows|length|pluralize }} scheduled</span>
+  </form>
+  {% endif %}
+
+  {% if has_slots %}
+  <div class="tablewrap">
+    <table class="tt">
+      <thead>
+        <tr><th></th>{% for d in days %}<th>{{ d }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.time|time:"H:i" }}</td>
+          {% for slot in row.cells %}
+          <td>
+            {% if slot %}
+            <div class="slot">
+              <b>{{ slot.subject.name|default:"Lesson" }}</b>
+              <span>{{ slot.end_time|time:"H:i" }}{% if slot.room %} · {{ slot.room }}{% endif %}</span>
+              {% if scope == 'class' %}{% if slot.teacher %}<span>{{ slot.teacher.name }}</span>{% endif %}{% endif %}
+              {% if can_manage %}
+              <span style="display:flex;gap:4px;margin-top:5px">
+                <a class="btn sm ghost" href="{% url 'timetable:slot_edit' slot.pk %}" title="Edit slot">{% icon 'edit' 13 %}</a>
+                <form method="post" action="{% url 'timetable:slot_delete' slot.pk %}" style="margin:0">
+                  {% csrf_token %}
+                  <button class="btn sm danger" type="submit" title="Delete slot" onclick="return confirm('Remove this slot?')">{% icon 'trash' 13 %}</button>
+                </form>
+              </span>
+              {% endif %}
+            </div>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    {% icon 'grid' 24 %}
+    <h3>No lessons scheduled</h3>
+    <p>{% if can_manage %}Add the first slot for this class and it will appear in the grid.{% else %}Nothing has been scheduled for the week yet.{% endif %}</p>
+    {% if can_manage %}<a class="btn primary" href="{% url 'timetable:slot_create' %}">{% icon 'plus' 15 %} Add slot</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

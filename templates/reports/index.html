@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Reports</h1>
+    <p>{{ year.name|default:"—" }}, {{ semester.name|default:"—" }} · build a report or download it as CSV.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn primary" href="{% url 'reports:analytics' %}">{% icon 'trend' 15 %} Open analytics</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Active students" v=stats.students icon="users" trend="On the roll" %}
+  {% include 'includes/stat.html' with k="Class sections" v=stats.classes icon="school" tone="brass" trend="Grades 7 to 12" %}
+  {% include 'includes/stat.html' with k="Published marks" v=stats.published_marks icon="clip" tone="ok" trend="Approved result sheets" %}
+  {% include 'includes/stat.html' with k="Attendance days" v=stats.attendance_days icon="cal" tone="info" trend="Registers recorded" %}
+</div>
+
+<section class="panel" style="margin-bottom:16px">
+  <div class="panel-head">
+    <h2>Download a report</h2>
+    <span class="sub">CSV export for the current period</span>
+  </div>
+  <form class="toolbar" method="get" action="{% url 'reports:export' %}">
+    <div class="field" style="min-width:220px">
+      <label for="report">Report</label>
+      <select id="report" name="report">
+        {% for r in reports %}<option value="{{ r.key }}">{{ r.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:200px">
+      <label for="class">Class (optional)</label>
+      <select id="class" name="class">
+        <option value="">All classes</option>
+        {% for c in classes %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="justify-content:flex-end">
+      <button class="btn primary" type="submit">{% icon 'down' 15 %} Download CSV</button>
+    </div>
+  </form>
+</section>
+
+<div class="grid g-3">
+  {% for r in reports %}
+    <section class="panel">
+      <div class="panel-head">
+        <h2>{% icon r.icon 16 %} {{ r.name }}</h2>
+      </div>
+      <div class="panel-body">
+        <p style="color:var(--tx-2);font-size:13.5px">{{ r.description }}</p>
+        <a class="btn block" style="margin-top:14px" href="{% url 'reports:export' %}?report={{ r.key }}">
+          {% icon 'down' 15 %} Download CSV
+        </a>
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

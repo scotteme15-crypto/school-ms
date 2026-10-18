@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Delete student{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Delete student</h1><p>This removes the student and their recorded marks.</p></div>
+</div>
+
+<section class="panel" style="max-width:560px">
+  <div class="panel-body">
+    <div class="note warn" style="margin-bottom:16px">{% icon 'warn' 16 %} This action cannot be undone.</div>
+    <p>Are you sure you want to delete <b>{{ object.full_name }}</b> ({{ object.student_id }})?</p>
+    <form method="post">
+      {% csrf_token %}
+      <div style="display:flex;gap:9px;margin-top:14px">
+        <button class="btn danger" type="submit">{% icon 'trash' 15 %} Delete student</button>
+        <a class="btn ghost" href="{% url 'students:detail' object.pk %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

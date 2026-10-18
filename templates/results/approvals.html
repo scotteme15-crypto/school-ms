@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Result approvals{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Result approvals</h1>
+    <p>{% if pending_count %}<b>{{ pending_count }} sheet{{ pending_count|pluralize }}</b> waiting for your decision.{% else %}No sheets are waiting for review.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'results:list' %}">{% icon 'clip' 15 %} All result sheets</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Awaiting review" v=pending_count icon="clock" tone="warn" trend="Submitted by teachers" %}
+</div>
+
+<section class="panel" style="margin-bottom:16px">
+  <div class="panel-head"><h2>Pending approval</h2><span class="sub">Oldest first</span></div>
+  <div class="tablewrap"><table class="dt">
+    <thead><tr><th>Subject · class</th><th>Teacher</th><th>Exam</th><th>Submitted</th><th class="num">Actions</th></tr></thead>
+    <tbody>
+      {% for r in pending %}
+        <tr>
+          <td><b>{{ r.subject.name }}</b><div class="sub">{{ r.school_class.name }} · {{ r.semester.name }}</div></td>
+          <td>{{ r.teacher.name }}</td>
+          <td>{{ r.exam_type }}</td>
+          <td>{{ r.submitted_at|date:"d M Y, H:i"|default:"—" }}</td>
+          <td class="num" style="white-space:nowrap">
+            <a class="btn sm" href="{% url 'results:sheet_detail' r.pk %}">{% icon 'eye' 14 %} Review</a>
+            <form method="post" action="{% url 'results:approve' r.pk %}" style="display:inline"
+                  data-confirm="Approve and publish these marks to students?" data-confirm-title="Approve results"
+                  data-confirm-action="Approve" data-confirm-danger="false">
+              {% csrf_token %}
+              <button class="btn sm primary" type="submit">{% icon 'checkc' 14 %} Approve</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5"><div class="empty">{% icon 'checkc' 24 %}<h3>Queue is clear</h3>
+          <p>Every submitted sheet has been decided.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Recently decided</h2></div>
+  <div class="tablewrap"><table class="dt">
+    <thead><tr><th>Subject · class</th><th>Teacher</th><th>Status</th><th>Decided</th><th class="num">Actions</th></tr></thead>
+    <tbody>
+      {% for r in decided %}
+        <tr>
+          <td><b>{{ r.subject.name }}</b><div class="sub">{{ r.school_class.name }} · {{ r.exam_type }}</div></td>
+          <td>{{ r.teacher.name }}</td>
+          <td>{% status_badge r.status %}</td>
+          <td>{{ r.decided_at|date:"d M Y"|default:"—" }}</td>
+          <td class="num"><a class="btn sm ghost" href="{% url 'results:sheet_detail' r.pk %}">{% icon 'eye' 14 %} Open</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" style="color:var(--tx-3)">Nothing decided yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

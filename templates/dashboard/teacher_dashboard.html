@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ greeting }}, {{ user.display_name|truncatechars:24 }}</h1>
+    <p>{% if lessons %}{{ lessons|length }} period{{ lessons|length|pluralize }} today.{% else %}No periods scheduled today.{% endif %}
+      {% if todo %}<b>{{ todo|length }} sheet{{ todo|length|pluralize }}</b> need your attention.
+      {% else %}All your sheets are with the registrar or approved.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'attendance:entry' %}">{% icon 'check' 15 %} Take register</a>
+    <a class="btn primary" href="{% url 'results:list' %}">{% icon 'pencil' 15 %} Enter results</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="My classes" v=kpis.classes icon="school" trend="Assigned to you" %}
+  {% include 'includes/stat.html' with k="My subjects" v=kpis.subjects icon="book" tone="info" trend="Across your classes" %}
+  {% include 'includes/stat.html' with k="Sheets to finish" v=kpis.todo icon="pencil" tone="warn" trend="Drafts or returned" %}
+  {% include 'includes/stat.html' with k="Registers today" v=kpis.marked_today icon="check" tone="ok" trend="Classes marked so far" %}
+</div>
+
+{% if todo %}
+<div class="note warn" style="margin-bottom:16px">{% icon 'warn' 17 %}
+  <div><b>{{ todo|length }} result sheet{{ todo|length|pluralize }} waiting on you.</b>
+    <p style="margin:3px 0 0">
+      {% for r in todo %}{{ r.subject.name }} — {{ r.school_class.name }} ({{ r.get_status_display }}){% if not forloop.last %}; {% endif %}{% endfor %}
+    </p>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid g-32" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Today — {{ today_name }}</h2><div class="right"><a class="btn sm ghost" href="{% url 'timetable:index' %}">Full timetable</a></div></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for l in lessons %}
+        <div class="feed"><span class="dotic">{% icon 'clock' 15 %}</span>
+          <div style="min-width:0"><p><b>{{ l.subject.name|default:"Free period" }}</b> · {{ l.school_class.name }}</p>
+          <time>{{ l.start_time|time:"H:i" }}–{{ l.end_time|time:"H:i" }} · Room {{ l.room }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">No periods today. Use the time to finish a result sheet.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Quick actions</h2></div>
+    <div class="panel-body"><div class="qa">
+      <a class="btn" href="{% url 'results:list' %}">{% icon 'pencil' 18 %} Enter results</a>
+      <a class="btn" href="{% url 'attendance:entry' %}">{% icon 'check' 18 %} Take register</a>
+      <a class="btn" href="{% url 'timetable:index' %}">{% icon 'grid' 18 %} My timetable</a>
+      <a class="btn" href="{% url 'assignments:list' %}">{% icon 'clip' 18 %} Assignments</a>
+      <a class="btn" href="{% url 'teachers:students' %}">{% icon 'users' 18 %} My students</a>
+      <a class="btn" href="{% url 'results:list' %}">{% icon 'checkc' 18 %} Sheet status</a>
+    </div></div>
+  </section>
+</div>
+
+<div class="grid g-2">
+  <section class="panel">
+    <div class="panel-head"><h2>My classes</h2></div>
+    <div class="tablewrap"><table class="dt">
+      <thead><tr><th>Class</th><th class="num">Students</th><th class="num">Register</th></tr></thead>
+      <tbody>
+        {% for c in classes %}
+          <tr><td><b>{{ c.name }}</b></td><td class="num">{{ c.students }}</td>
+            <td class="num">{% if c.marked_today %}{% status_badge 'approved' %}{% else %}{% status_badge 'pending' %}{% endif %}</td></tr>
+        {% empty %}
+          <tr><td colspan="3" style="color:var(--tx-3)">You have no classes assigned yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Notices for staff</h2><div class="right"><a class="btn sm ghost" href="{% url 'announcements:list' %}">All notices</a></div></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for a in notices %}
+        <div class="feed"><span class="dotic">{% icon 'mega' 15 %}</span>
+          <div style="min-width:0"><p><b>{{ a.title }}</b></p><time>{{ a.date|date:"d M Y" }} · {{ a.audience }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">No notices right now.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

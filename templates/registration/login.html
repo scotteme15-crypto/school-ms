@@ -1,0 +1,79 @@
+{% load static ui %}<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in — {{ school.school_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/main.css' %}?v={{ asset_version }}">
+<link rel="stylesheet" href="{% static 'css/components.css' %}?v={{ asset_version }}">
+</head>
+<body>
+
+<div class="auth" id="auth">
+  <section class="auth-art">
+    <div class="crest" style="position:relative;z-index:1">
+      <div class="mark">{{ school.school_name|slice:":1"|upper }}</div>
+      <div>
+        <span class="wm" style="color:#fff">{{ school.school_name }}</span>
+        <small style="color:#8FAEA3">{{ school.address|default:"Addis Ababa" }} · Grades 7–12</small>
+      </div>
+    </div>
+    <div style="position:relative;z-index:1">
+      <h1>Every mark, from the register to the report card.</h1>
+      <p class="hidemob">Teachers enter results and attendance. The registrar reviews and approves. Students see their report only once it is signed off.</p>
+    </div>
+    <div class="auth-stats hidemob">
+      <div><b class="num">{{ stats.students }}</b><span>Students enrolled</span></div>
+      <div><b class="num">{{ stats.teachers }}</b><span>Teaching staff</span></div>
+      <div><b class="num">{{ stats.classes }}</b><span>Class sections</span></div>
+    </div>
+  </section>
+
+  <section class="auth-form">
+    <div class="auth-box">
+      <h2 style="font-family:var(--serif);font-size:26px;font-weight:500">Sign in</h2>
+      <p style="color:var(--tx-2);font-size:14px;margin-bottom:20px">Use your school account to continue.</p>
+
+      <form method="post" action="{% url 'accounts:login' %}" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="errorbox" style="margin-bottom:14px">{% icon 'warn' 18 %}<div>{{ form.non_field_errors.0 }}</div></div>
+        {% endif %}
+
+        <div class="field" style="margin-bottom:14px">
+          <label for="{{ form.username.id_for_label }}">Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}<span class="fielderr">{{ form.username.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div class="field" style="margin-bottom:12px">
+          <label for="{{ form.password.id_for_label }}">Password</label>
+          <div style="position:relative">
+            {{ form.password }}
+            <button type="button" class="rowbtn" data-pw-toggle="#{{ form.password.id_for_label }}"
+                    aria-label="Show password" style="position:absolute;right:6px;top:50%;transform:translateY(-50%)"></button>
+          </div>
+          {% if form.password.errors %}<span class="fielderr">{{ form.password.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px">
+          <label style="display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--tx-2)">
+            <input type="checkbox" name="remember" style="width:auto"> Keep me signed in
+          </label>
+          <a class="btn ghost sm" href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+        </div>
+
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button class="btn primary block" type="submit" style="padding:11px">Sign in</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<script src="{% static 'js/main.js' %}?v={{ asset_version }}"></script>
+<script src="{% static 'js/forms.js' %}?v={{ asset_version }}"></script>
+</body>
+</html>

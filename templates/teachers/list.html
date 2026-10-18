@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Teachers{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Teachers</h1><p>The teaching staff, their departments and contact details.</p></div>
+  <div class="page-actions">
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn primary" href="{% url 'teachers:create' %}">{% icon 'plus' 15 %} Add teacher</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="search-inp">{% icon 'search' 15 %}<input type="search" name="q" value="{{ q }}" placeholder="Search name, staff ID or email…"></div>
+    <div class="field" style="min-width:170px">
+      <select name="department">
+        <option value="">All departments</option>
+        {% for d in departments %}<option value="{{ d }}" {% if department == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:150px">
+      <select name="status">
+        <option value="">Any status</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn sm primary" type="submit">{% icon 'filter' 14 %} Filter</button>
+    {% if q or department or status %}<a class="btn sm ghost" href="{% url 'teachers:list' %}">{% icon 'x' 14 %} Clear</a>{% endif %}
+  </form>
+
+  <div class="tablewrap">
+    <table class="dt">
+      <thead><tr><th>Teacher</th><th>Department</th><th>Qualification</th><th>Contact</th><th>Status</th><th class="acts">Actions</th></tr></thead>
+      <tbody>
+        {% for t in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar t.name %}<div><b>{{ t.name }}</b><span>{{ t.teacher_id }}</span></div></div></td>
+            <td>{{ t.department }}</td>
+            <td>{{ t.qualification|default:"—" }}</td>
+            <td>{{ t.email|default:"—" }}{% if t.phone %}<br><span style="color:var(--tx-3);font-size:12px">{{ t.phone }}</span>{% endif %}</td>
+            <td>{% person_badge t.status %}</td>
+            <td class="acts">
+              <a class="rowbtn" href="{% url 'teachers:detail' t.pk %}" title="View">{% icon 'eye' 15 %}</a>
+              {% if user.is_admin_role or user.is_superuser %}
+                <a class="rowbtn" href="{% url 'teachers:edit' t.pk %}" title="Edit">{% icon 'edit' 15 %}</a>
+                <a class="rowbtn del" href="{% url 'teachers:delete' t.pk %}" title="Delete">{% icon 'trash' 15 %}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6"><div class="empty"><div class="ring">{% icon 'cap' 22 %}</div><h3>No teachers found</h3><p>Adjust the filters or add a new teacher.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

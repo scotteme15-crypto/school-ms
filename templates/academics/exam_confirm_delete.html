@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Delete exam{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Delete exam</h1><p>Result sheets linked to this exam will be kept but unlinked.</p></div>
+</div>
+
+<section class="panel" style="max-width:560px">
+  <div class="panel-body">
+    <div class="note warn" style="margin-bottom:16px">{% icon 'warn' 16 %} This action cannot be undone.</div>
+    <p>Are you sure you want to delete <b>{{ object.name }}</b> ({{ object.date|date:"d M Y" }})?</p>
+    <form method="post">
+      {% csrf_token %}
+      <div style="display:flex;gap:9px;margin-top:14px">
+        <button class="btn danger" type="submit">{% icon 'trash' 15 %} Delete exam</button>
+        <a class="btn ghost" href="{% url 'academics:exam_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

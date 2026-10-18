@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-head no-print">
+  <div>
+    <h1>Report card</h1>
+    <p>{{ student.full_name }} · {{ period.semester }}, {{ period.year }}</p>
+  </div>
+  <div class="page-actions">
+    {% if user.is_student_role %}
+      <a class="btn ghost" href="{% url 'results:my_results' %}">{% icon 'right' 15 %} My results</a>
+    {% else %}
+      <a class="btn ghost" href="{% url 'results:list' %}">{% icon 'right' 15 %} Result sheets</a>
+    {% endif %}
+    <button class="btn primary" type="button" data-print>{% icon 'print' 15 %} Print report card</button>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-body">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid var(--line-2);padding-bottom:14px;margin-bottom:16px">
+      <div>
+        <h2 style="font-family:var(--serif);font-size:20px;margin:0">{{ settings.school_name }}</h2>
+        <p style="color:var(--tx-3);margin:4px 0 0">{{ settings.address }}{% if settings.phone %} · {{ settings.phone }}{% endif %}</p>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--serif);font-size:16px"><b>Student report card</b></div>
+        <div style="color:var(--tx-3);font-size:12.5px">{{ period.semester }}, {{ period.year }}</div>
+      </div>
+    </div>
+
+    <div class="grid g-4" style="margin-bottom:16px">
+      <div><p style="color:var(--tx-3);font-size:12px;margin:0">Student</p><p style="margin:2px 0 0"><b>{{ student.full_name }}</b></p></div>
+      <div><p style="color:var(--tx-3);font-size:12px;margin:0">Student ID</p><p style="margin:2px 0 0"><b>{{ student.student_id }}</b></p></div>
+      <div><p style="color:var(--tx-3);font-size:12px;margin:0">Class</p><p style="margin:2px 0 0"><b>{{ student.school_class.name|default:"—" }}</b></p></div>
+      <div><p style="color:var(--tx-3);font-size:12px;margin:0">Attendance</p><p style="margin:2px 0 0"><b>{{ attendance.percentage|pct }}</b></p></div>
+    </div>
+
+    <div class="tablewrap"><table class="dt">
+      <thead><tr>
+        <th>Subject</th><th>Exam</th><th class="num">Total</th><th class="num">%</th>
+        <th class="num">Grade</th><th class="num">Points</th><th>Remark</th>
+      </tr></thead>
+      <tbody>
+        {% for s in subjects %}
+          <tr>
+            <td><b>{{ s.subject }}</b></td>
+            <td>{{ s.exam_type }}</td>
+            <td class="num">{{ s.total|num }}</td>
+            <td class="num">{{ s.percentage|pct }}</td>
+            <td class="num"><b>{{ s.grade }}</b></td>
+            <td class="num">{{ s.grade_point|num }}</td>
+            <td>{{ s.remark|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="empty">{% icon 'award' 24 %}<h3>No published results</h3>
+            <p>This report card has no approved marks for the selected semester.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+      {% if subjects %}
+        <tfoot><tr>
+          <td colspan="4" class="num"><b>Overall average</b></td>
+          <td class="num"><b>{{ overall_grade }}</b></td>
+          <td class="num"><b>{{ points|num }}</b></td>
+          <td>{{ overall_remark|default:"—" }}</td>
+        </tr></tfoot>
+      {% endif %}
+    </table></div>
+
+    <div class="grid g-3" style="margin-top:16px">
+      <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Average</p><p><b>{{ average|pct }}</b></p></div></div>
+      <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Class position</p><p><b>{% if rank %}{{ rank.rank }} of {{ rank.of }}{% else %}—{% endif %}</b></p></div></div>
+      <div class="feed"><div style="min-width:0"><p style="color:var(--tx-3)">Days recorded</p><p><b>{{ attendance.total }}</b></p></div></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;gap:24px;margin-top:34px">
+      <div style="flex:1;border-top:1px solid var(--line-2);padding-top:6px;color:var(--tx-3);font-size:12.5px">Class teacher's signature</div>
+      <div style="flex:1;border-top:1px solid var(--line-2);padding-top:6px;color:var(--tx-3);font-size:12.5px">Registrar's signature &amp; stamp</div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Exams{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Exams</h1><p>Scheduled assessments with dates, times and venues.</p></div>
+  <div class="page-actions">
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn primary" href="{% url 'academics:exam_create' %}">{% icon 'plus' 15 %} Schedule exam</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="search-inp">{% icon 'search' 15 %}<input type="search" name="q" value="{{ q }}" placeholder="Search exam, subject or room…"></div>
+    <div class="field" style="min-width:150px">
+      <select name="grade">
+        <option value="">All grades</option>
+        {% for value, label in grade_choices %}
+          <option value="{{ value }}" {% if grade == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:160px">
+      <select name="exam_type">
+        <option value="">All types</option>
+        {% for value, label in exam_type_choices %}<option value="{{ value }}" {% if exam_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn sm primary" type="submit">{% icon 'filter' 14 %} Filter</button>
+    {% if q or grade or exam_type %}<a class="btn sm ghost" href="{% url 'academics:exam_list' %}">{% icon 'x' 14 %} Clear</a>{% endif %}
+  </form>
+
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr><th>Exam</th><th>Type</th><th>Grade</th><th>Subject</th><th>Date</th><th>Time</th><th>Room</th>{% if user.is_admin_role or user.is_superuser %}<th class="acts">Actions</th>{% endif %}</tr>
+      </thead>
+      <tbody>
+        {% for e in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar e.name %}<div><b>{{ e.name }}</b><span>{{ e.academic_year.name|default:"—" }}</span></div></div></td>
+            <td><span class="badge">{{ e.exam_type }}</span></td>
+            <td>Grade {{ e.grade }}</td>
+            <td>{{ e.subject.name|default:"—" }}</td>
+            <td>{{ e.date|date:"d M Y" }}</td>
+            <td>{% if e.start_time %}{{ e.start_time|time:"H:i" }}{% if e.end_time %} – {{ e.end_time|time:"H:i" }}{% endif %}{% else %}—{% endif %}</td>
+            <td>{{ e.room|default:"—" }}</td>
+            {% if user.is_admin_role or user.is_superuser %}
+              <td class="acts">
+                <a class="rowbtn" href="{% url 'academics:exam_edit' e.pk %}" title="Edit">{% icon 'edit' 15 %}</a>
+                <a class="rowbtn del" href="{% url 'academics:exam_delete' e.pk %}" title="Delete">{% icon 'trash' 15 %}</a>
+              </td>
+            {% endif %}
+          </tr>
+        {% empty %}
+          <tr><td colspan="{% if user.is_admin_role or user.is_superuser %}8{% else %}7{% endif %}"><div class="empty"><div class="ring">{% icon 'scroll' 22 %}</div><h3>No exams scheduled</h3><p>{% if user.is_admin_role or user.is_superuser %}Schedule an exam to publish it to staff and students.{% else %}No exams have been published for you yet.{% endif %}</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

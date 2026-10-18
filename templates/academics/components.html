@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Assessment components{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Assessment components</h1><p>Weighting for assignments, quizzes, midterms and finals. Weights should total 100%.</p></div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'academics:grading' %}">{% icon 'award' 15 %} Grading scale</a>
+    <a class="btn" href="{% url 'academics:settings' %}">{% icon 'gear' 15 %} Settings</a>
+  </div>
+</div>
+
+{% if not weights_ok %}
+  <div class="note warn" style="margin-bottom:16px">
+    {% icon 'warn' 16 %} Assessment weights currently total <b>{{ weights_total|num }}%</b>, not 100%. Final grades are only trusted once this is corrected.
+  </div>
+{% else %}
+  <div class="note ok" style="margin-bottom:16px">{% icon 'check' 16 %} Assessment weights total 100%. Final grades are consistent.</div>
+{% endif %}
+
+<div class="grid g-23">
+  <section class="panel">
+    <div class="panel-head"><h2>{% if edit_obj %}Edit component{% else %}Add a component{% endif %}</h2></div>
+    <div class="panel-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if edit_obj %}<input type="hidden" name="component_id" value="{{ edit_obj.pk }}">{% endif %}
+        <div class="grid g-2">
+          {% for field in form %}
+            <div class="field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<span class="hint">{{ field.help_text }}</span>{% endif %}
+              {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div style="display:flex;gap:9px;margin-top:16px">
+          <button class="btn primary" type="submit">{% icon 'check' 15 %} {% if edit_obj %}Save component{% else %}Add component{% endif %}</button>
+          {% if edit_obj %}<a class="btn ghost" href="{% url 'academics:components' %}">{% icon 'x' 15 %} Cancel edit</a>{% endif %}
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Components</h2><span class="sub">Total weight {{ weights_total|num }}%</span></div>
+    <div class="tablewrap">
+      <table class="dt">
+        <thead><tr><th>Component</th><th class="num">Max score</th><th class="num">Weight</th><th class="num">Order</th><th class="acts">Actions</th></tr></thead>
+        <tbody>
+          {% for c in components %}
+            <tr>
+              <td><div class="idcell"><div><b>{{ c.label }}</b><span>{{ c.key }}</span></div></div></td>
+              <td class="num">{{ c.max_score|num }}</td>
+              <td class="num">{{ c.weight_percent|num }}%</td>
+              <td class="num">{{ c.order }}</td>
+              <td class="acts">
+                <a class="rowbtn" href="{% url 'academics:components' %}?edit={{ c.pk }}" title="Edit">{% icon 'edit' 15 %}</a>
+                <form method="post" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="component_id" value="{{ c.pk }}">
+                  <input type="hidden" name="action" value="delete">
+                  <button class="rowbtn del" type="submit" title="Delete" onclick="return confirm('Delete this component?')">{% icon 'trash' 15 %}</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5"><div class="empty"><div class="ring">{% icon 'grid' 22 %}</div><h3>No components</h3><p>Add assignment, quiz, midterm and final weightings.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

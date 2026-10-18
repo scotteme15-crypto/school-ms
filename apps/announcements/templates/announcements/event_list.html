@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}School events{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>School events</h1>
+    <p>Meetings, exams, holidays and ceremonies on the school calendar.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'announcements:list' %}">{% icon 'mega' 15 %} Announcements</a>
+    {% if can_manage %}
+      <a class="btn primary" href="{% url 'announcements:event_create' %}">{% icon 'plus' 15 %} New event</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid g-32">
+  <section class="panel">
+    <div class="panel-head">
+      <h2>{{ month_label }}</h2>
+      <div class="right">
+        <a class="btn sm ghost" href="{% url 'announcements:event_list' %}?month={{ prev_month }}" aria-label="Previous month">{% icon 'right' 14 %}</a>
+        <a class="btn sm ghost" href="{% url 'announcements:event_list' %}">Today</a>
+        <a class="btn sm ghost" href="{% url 'announcements:event_list' %}?month={{ next_month }}" aria-label="Next month">{% icon 'right' 14 %}</a>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="cal">
+        {% for d in dow_labels %}<div class="dow">{{ d }}</div>{% endfor %}
+        {% for week in weeks %}{% for cell in week %}
+          <div class="day{% if not cell.in_month %} out{% endif %}{% if cell.today %} today{% endif %}">
+            <span class="n">{{ cell.date.day }}</span>
+            {% for e in cell.events %}
+              <span class="evchip {{ e.event_type }}" title="{{ e.title }}{% if e.location %} · {{ e.location }}{% endif %}">{{ e.title }}</span>
+            {% endfor %}
+          </div>
+        {% endfor %}{% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Upcoming</h2></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for e in upcoming %}
+        <div class="feed">
+          <span class="dotic">{% icon 'cal' 15 %}</span>
+          <div style="min-width:0">
+            <p><b>{{ e.title }}</b></p>
+            <time>{{ e.date|date:"d M Y" }} · {{ e.get_event_type_display }}{% if e.location %} · {{ e.location }}{% endif %}</time>
+          </div>
+          {% if can_manage %}
+          <div style="margin-left:auto;display:flex;gap:4px">
+            <a class="btn sm ghost" href="{% url 'announcements:event_edit' e.pk %}" title="Edit">{% icon 'edit' 13 %}</a>
+            <form method="post" action="{% url 'announcements:event_delete' e.pk %}" style="margin:0">
+              {% csrf_token %}
+              <button class="btn sm danger" type="submit" title="Delete" onclick="return confirm('Remove this event?')">{% icon 'trash' 13 %}</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">Nothing scheduled yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+{% if past %}
+<section class="panel" style="margin-top:16px">
+  <div class="panel-head"><h2>Recently passed</h2></div>
+  <div class="panel-body" style="padding-top:4px">
+    {% for e in past %}
+      <div class="feed">
+        <span class="dotic">{% icon 'cal' 15 %}</span>
+        <div style="min-width:0">
+          <p><b>{{ e.title }}</b></p>
+          <time>{{ e.date|date:"d M Y" }} · {{ e.get_event_type_display }}</time>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'registration/_auth.html' %}
+{% load ui %}
+{% block title %}Something went wrong{% endblock %}
+{% block card %}
+<div style="text-align:center">
+  <div class="empty" style="padding:0 0 16px">
+    <div class="ring" style="margin:0 auto 14px">{% icon 'warn' 22 %}</div>
+    <h3>500 · Something went wrong</h3>
+    <p style="margin:0 auto">{{ message|default:"An unexpected error occurred. Please try again." }}</p>
+  </div>
+  <a class="btn primary block" href="/">Back to dashboard</a>
+</div>
+{% endblock %}

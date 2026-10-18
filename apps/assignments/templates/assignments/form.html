@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ page_title }}</h1>
+    <p>Describe the work, choose the class and subject, and set a due date.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'assignments:list' %}">{% icon 'right' 15 %} Back to assignments</a>
+  </div>
+</div>
+
+<section class="panel" style="max-width:780px">
+  <div class="panel-head"><h2>Assignment details</h2></div>
+  <div class="panel-body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errorbox" style="margin-bottom:14px">{% icon 'warn' 15 %} {{ form.non_field_errors.0 }}</div>
+      {% endif %}
+      <div class="field" style="margin-bottom:14px">
+        <label for="{{ form.title.id_for_label }}">Title</label>
+        {{ form.title }}
+        {% if form.title.errors %}<span class="fielderr">{{ form.title.errors.0 }}</span>{% endif %}
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="{{ form.school_class.id_for_label }}">Class</label>
+          {{ form.school_class }}
+          {% if form.school_class.errors %}<span class="fielderr">{{ form.school_class.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ form.subject.id_for_label }}">Subject</label>
+          {{ form.subject }}
+          {% if form.subject.errors %}<span class="fielderr">{{ form.subject.errors.0 }}</span>{% endif %}
+        </div>
+        {% if form.teacher %}
+        <div class="field">
+          <label for="{{ form.teacher.id_for_label }}">Teacher</label>
+          {{ form.teacher }}
+        </div>
+        {% endif %}
+        <div class="field">
+          <label for="{{ form.max_mark.id_for_label }}">Maximum mark</label>
+          {{ form.max_mark }}
+          {% if form.max_mark.errors %}<span class="fielderr">{{ form.max_mark.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ form.due_date.id_for_label }}">Due date</label>
+          {{ form.due_date }}
+          {% if form.due_date.errors %}<span class="fielderr">{{ form.due_date.errors.0 }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+      </div>
+      <div style="display:flex;gap:9px;margin-top:16px">
+        <button class="btn primary" type="submit">{% icon 'check' 15 %} {% if mode == 'edit' %}Save changes{% else %}Create assignment{% endif %}</button>
+        <a class="btn ghost" href="{% url 'assignments:list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

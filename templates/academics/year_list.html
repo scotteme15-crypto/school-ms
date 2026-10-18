@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Academic years{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Academic years</h1><p>The school calendar of years and their semesters.</p></div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'academics:semester_list' %}">{% icon 'cal' 15 %} Semesters</a>
+    <a class="btn primary" href="{% url 'academics:year_create' %}">{% icon 'plus' 15 %} New year</a>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr><th>Year</th><th>Starts</th><th>Ends</th><th class="num">Semesters</th><th>Current</th><th class="acts">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for y in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar y.name %}<div><b>{{ y.name }}</b></div></div></td>
+            <td>{{ y.start_date|date:"d M Y"|default:"—" }}</td>
+            <td>{{ y.end_date|date:"d M Y"|default:"—" }}</td>
+            <td class="num">{{ y.semester_count }}</td>
+            <td>{% if y.is_current %}<span class="badge ok">Current</span>{% else %}<span class="badge">—</span>{% endif %}</td>
+            <td class="acts"><a class="rowbtn" href="{% url 'academics:year_edit' y.pk %}" title="Edit">{% icon 'edit' 15 %}</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6"><div class="empty"><div class="ring">{% icon 'cal' 22 %}</div><h3>No academic years</h3><p>Create a year to start scheduling semesters and results.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

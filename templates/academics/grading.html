@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Grading scale{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Grading scale</h1><p>Configure the letter bands, grade points and remarks used across the school.</p></div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'academics:components' %}">{% icon 'grid' 15 %} Assessment components</a>
+    <a class="btn" href="{% url 'academics:settings' %}">{% icon 'gear' 15 %} Settings</a>
+  </div>
+</div>
+
+<div class="grid g-23">
+  <section class="panel">
+    <div class="panel-head"><h2>{% if edit_obj %}Edit band{% else %}Add a band{% endif %}</h2><span class="sub">All weights are configurable</span></div>
+    <div class="panel-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if edit_obj %}<input type="hidden" name="band_id" value="{{ edit_obj.pk }}">{% endif %}
+        <div class="grid g-2">
+          {% for field in form %}
+            <div class="field" {% if field.name == 'remark' %}style="grid-column:1/-1"{% endif %}>
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div style="display:flex;gap:9px;margin-top:16px">
+          <button class="btn primary" type="submit">{% icon 'check' 15 %} {% if edit_obj %}Save band{% else %}Add band{% endif %}</button>
+          {% if edit_obj %}<a class="btn ghost" href="{% url 'academics:grading' %}">{% icon 'x' 15 %} Cancel edit</a>{% endif %}
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Bands</h2><span class="sub">{{ bands|length }} configured</span></div>
+    <div class="tablewrap">
+      <table class="dt">
+        <thead><tr><th>Letter</th><th class="num">Min score</th><th class="num">Point</th><th>Remark</th><th class="acts">Actions</th></tr></thead>
+        <tbody>
+          {% for b in bands %}
+            <tr>
+              <td><b class="grade-{{ b.letter }}">{{ b.letter }}</b></td>
+              <td class="num">{{ b.min_score|num }}</td>
+              <td class="num">{{ b.point|num }}</td>
+              <td>{{ b.remark|default:"—" }}</td>
+              <td class="acts">
+                <a class="rowbtn" href="{% url 'academics:grading' %}?edit={{ b.pk }}" title="Edit">{% icon 'edit' 15 %}</a>
+                <form method="post" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="band_id" value="{{ b.pk }}">
+                  <input type="hidden" name="action" value="delete">
+                  <button class="rowbtn del" type="submit" title="Delete" onclick="return confirm('Delete this grading band?')">{% icon 'trash' 15 %}</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5"><div class="empty"><div class="ring">{% icon 'award' 22 %}</div><h3>No grading bands</h3><p>Add your first band to build the grading scale.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Notifications</h1>
+    <p>{% if unread_count %}{{ unread_count }} unread notification{{ unread_count|pluralize }}.{% else %}You are all caught up.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    {% if unread_count %}
+      <form method="post" action="{% url 'notifications:mark_all_read' %}" style="margin:0">
+        {% csrf_token %}
+        <button class="btn primary" type="submit">{% icon 'checkc' 15 %} Mark all read</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h2>Inbox</h2><span class="sub">{{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}</span></div>
+  <div class="panel-body" style="padding-top:4px">
+    {% for n in page_obj %}
+    <div class="feed">
+      <span class="dotic">
+        {% if n.kind == 'result' %}{% icon 'award' 15 %}
+        {% elif n.kind == 'warning' %}{% icon 'warn' 15 %}
+        {% elif n.kind == 'announcement' %}{% icon 'mega' 15 %}
+        {% elif n.kind == 'exam' %}{% icon 'scroll' 15 %}
+        {% else %}{% icon 'bell' 15 %}{% endif %}
+      </span>
+      <div style="min-width:0">
+        <p><b>{{ n.title }}</b> {% if not n.read %}<span class="badge info">Unread</span>{% endif %}</p>
+        {% if n.body %}<p style="color:var(--tx-2)">{{ n.body }}</p>{% endif %}
+        <time>{{ n.created_at|date:"d M Y, H:i" }}</time>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:4px;align-items:flex-start">
+        {% if n.url %}<a class="btn sm ghost" href="{{ n.url }}">Open</a>{% endif %}
+        {% if not n.read %}
+        <form method="post" action="{% url 'notifications:mark_read' n.pk %}" style="margin:0">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn sm ghost" type="submit" title="Mark as read">{% icon 'check' 13 %}</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{% url 'notifications:delete' n.pk %}" style="margin:0">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn sm danger" type="submit" title="Delete" onclick="return confirm('Delete this notification?')">{% icon 'trash' 13 %}</button>
+        </form>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty">
+      {% icon 'bell' 24 %}
+      <h3>No notifications</h3>
+      <p>Results, warnings and reminders will appear here as they arrive.</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

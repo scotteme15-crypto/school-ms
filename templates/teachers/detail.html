@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ teacher.name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ teacher.name }}</h1>
+    <p>{{ teacher.teacher_id }} · {{ teacher.department }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'teachers:list' %}">{% icon 'cap' 15 %} All teachers</a>
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn" href="{% url 'teachers:edit' teacher.pk %}">{% icon 'edit' 15 %} Edit</a>
+      <a class="btn danger" href="{% url 'teachers:delete' teacher.pk %}">{% icon 'trash' 15 %} Delete</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid g-23" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Profile</h2></div>
+    <div class="panel-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        {% avatar teacher.name 'lg' %}
+        <div style="min-width:0">
+          <b style="font-size:15px">{{ teacher.name }}</b>
+          <div style="color:var(--tx-3);font-size:12.5px">{{ teacher.teacher_id }}</div>
+          {% person_badge teacher.status %}
+        </div>
+      </div>
+      <dl class="kv">
+        <dt>Department</dt><dd>{{ teacher.department }}</dd>
+        <dt>Qualification</dt><dd>{{ teacher.qualification|default:"—" }}</dd>
+        <dt>Gender</dt><dd>{{ teacher.get_gender_display }}</dd>
+        <dt>Employment date</dt><dd>{{ teacher.employment_date|date:"d M Y"|default:"—" }}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Contact</h2></div>
+    <div class="panel-body">
+      <dl class="kv">
+        <dt>Email</dt><dd>{{ teacher.email|default:"—" }}</dd>
+        <dt>Phone</dt><dd>{{ teacher.phone|default:"—" }}</dd>
+      </dl>
+      <div class="feed" style="margin-top:12px"><span class="dotic">{% icon 'school' 15 %}</span>
+        <div style="min-width:0"><p>Homeroom classes</p><p><b>{{ homeroom_classes|length }}</b></p></div></div>
+      <div class="feed"><span class="dotic">{% icon 'book' 15 %}</span>
+        <div style="min-width:0"><p>Subjects taught</p><p><b>{{ subjects|length }}</b></p></div></div>
+    </div>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h2>Teaching load</h2><span class="sub">{{ assignments|length }} assignment{{ assignments|length|pluralize }}</span></div>
+  <div class="tablewrap">
+    <table class="dt">
+      <thead><tr><th>Subject</th><th>Class</th><th>Academic year</th></tr></thead>
+      <tbody>
+        {% for a in assignments %}
+          <tr><td>{{ a.subject.name }}</td><td>{{ a.school_class.name }}</td><td>{{ a.academic_year.name|default:"—" }}</td></tr>
+        {% empty %}
+          <tr><td colspan="3"><div class="empty" style="padding:32px"><p>No teaching assignments recorded.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

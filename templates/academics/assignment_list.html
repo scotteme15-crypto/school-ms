@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Teaching assignments{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Teaching assignments</h1><p>Which teacher teaches which subject in which class.</p></div>
+  <div class="page-actions">
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn primary" href="{% url 'academics:assignment_create' %}">{% icon 'plus' 15 %} New assignment</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="search-inp">{% icon 'search' 15 %}<input type="search" name="q" value="{{ q }}" placeholder="Search teacher or subject…"></div>
+    <div class="field" style="min-width:170px">
+      <select name="class">
+        <option value="">All classes</option>
+        {% for c in classes %}<option value="{{ c.pk }}" {% if class_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn sm primary" type="submit">{% icon 'filter' 14 %} Filter</button>
+    {% if q or class_id %}<a class="btn sm ghost" href="{% url 'academics:assignment_list' %}">{% icon 'x' 14 %} Clear</a>{% endif %}
+  </form>
+
+  <div class="tablewrap">
+    <table class="dt">
+      <thead><tr><th>Teacher</th><th>Subject</th><th>Class</th><th>Academic year</th><th class="acts">Actions</th></tr></thead>
+      <tbody>
+        {% for a in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar a.teacher.name %}<div><b>{{ a.teacher.name }}</b><span>{{ a.teacher.teacher_id }}</span></div></div></td>
+            <td>{{ a.subject.name }}</td>
+            <td>{{ a.school_class.name }}</td>
+            <td>{{ a.academic_year.name|default:"—" }}</td>
+            <td class="acts">
+              {% if user.is_admin_role or user.is_superuser %}
+                <a class="rowbtn del" href="{% url 'academics:assignment_delete' a.pk %}" title="Delete">{% icon 'trash' 15 %}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5"><div class="empty"><div class="ring">{% icon 'cap' 22 %}</div><h3>No teaching assignments</h3><p>Assign a teacher to a subject and class to build timetables and result sheets.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

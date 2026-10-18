@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Audit log{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Audit log</h1>
+    <p>{{ total }} recorded action{{ total|pluralize }} · read-only security and data trail.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'reports:index' %}">{% icon 'file' 15 %} Reports</a>
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="field" style="flex:1;min-width:200px">
+      <label for="q">Search</label>
+      <input id="q" type="search" name="q" value="{{ filters.q }}" placeholder="Action, user or description">
+    </div>
+    <div class="field">
+      <label for="module">Module</label>
+      <select id="module" name="module">
+        <option value="">All modules</option>
+        {% for m in modules %}<option value="{{ m }}" {% if filters.module == m %}selected{% endif %}>{{ m }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="role">Role</label>
+      <select id="role" name="role">
+        <option value="">All roles</option>
+        {% for r in roles %}<option value="{{ r }}" {% if filters.role == r %}selected{% endif %}>{{ r }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="justify-content:flex-end">
+      <button class="btn primary" type="submit">{% icon 'filter' 15 %} Apply</button>
+    </div>
+    {% if filters.q or filters.module or filters.role %}
+      <div class="field" style="justify-content:flex-end">
+        <a class="btn ghost" href="{% url 'audit:list' %}">{% icon 'x' 15 %} Clear</a>
+      </div>
+    {% endif %}
+  </form>
+
+  {% if logs %}
+    <div class="tablewrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Actor</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Module</th>
+            <th>Details</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in logs %}
+            <tr>
+              <td title="{{ entry.created_at|date:'d M Y H:i' }}">
+                {{ entry.created_at|date:"d M Y" }}
+                <br><span style="color:var(--tx-3);font-size:12px">{{ entry.created_at|time:"H:i" }}</span>
+              </td>
+              <td><b>{{ entry.user_name|default:"System" }}</b></td>
+              <td>{% if entry.role %}<span class="badge">{{ entry.role }}</span>{% else %}—{% endif %}</td>
+              <td>{{ entry.action }}</td>
+              <td>{% if entry.module %}<span class="badge info">{{ entry.module }}</span>{% else %}—{% endif %}</td>
+              <td style="max-width:360px">{{ entry.description|default:"—" }}</td>
+              <td>{{ entry.ip_address|default:"—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'includes/pagination.html' with page_obj=page_obj %}
+  {% else %}
+    <div class="empty">
+      <div class="ring">{% icon 'act' 24 %}</div>
+      <h3>No audit entries found</h3>
+      <p>
+        {% if filters.q or filters.module or filters.role %}
+          Try clearing the filters to see the whole trail.
+        {% else %}
+          Actions such as sign-ins, approvals and edits will appear here.
+        {% endif %}
+      </p>
+      {% if filters.q or filters.module or filters.role %}
+        <a class="btn" href="{% url 'audit:list' %}">Clear filters</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

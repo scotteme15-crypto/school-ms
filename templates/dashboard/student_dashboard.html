@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+{% if not student %}
+  <div class="page-head"><div><h1>{{ greeting }}</h1><p>Your account is not linked to a student record yet.</p></div></div>
+  <section class="panel"><div class="panel-body">
+    <div class="empty">{% icon 'user' 24 %}<h3>No student record</h3>
+      <p>Ask the registrar to link your login to your student profile. Your results will appear here once that is done.</p></div>
+  </div></section>
+{% else %}
+<div class="page-head">
+  <div>
+    <h1>{{ greeting }}, {{ student.first_name }}</h1>
+    <p>{{ student.school_class.name|default:"—" }} · {{ period.semester }}, {{ period.year }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn primary" href="{% url 'results:my_results' %}">{% icon 'award' 15 %} My results</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Average" v=average|default:"—" icon="award" trend="Published results only" %}
+  {% include 'includes/stat.html' with k="Class rank" v=class_rank.rank|default:"—" icon="trend" tone="brass" trend="Within your section" %}
+  {% include 'includes/stat.html' with k="School rank" v=school_rank.rank|default:"—" icon="cap" tone="info" trend="Across the school" %}
+  {% include 'includes/stat.html' with k="Attendance" v=attendance.pct icon="check" tone="ok" trend="Days marked so far" %}
+</div>
+
+<div class="grid g-32" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Approved subjects</h2><span class="sub">{{ subjects|length }} published</span>
+      <div class="right"><a class="btn sm ghost" href="{% url 'results:my_results' %}">Full result</a></div></div>
+    <div class="panel-body">
+      {% if subjects %}
+        <div class="hbars">
+          {% for s in subjects %}
+            <div class="bar-row"><span class="lab" title="{{ s.subject }}">{{ s.subject }}</span>
+              <span class="track"><span class="fill" style="width:{{ s.total }}%;background:{% if s.total >= 70 %}var(--ok){% elif s.total >= 50 %}var(--brass){% else %}var(--bad){% endif %}"></span></span>
+              <span class="val">{{ s.total }}% {{ s.grade }}</span></div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty">{% icon 'award' 24 %}<h3>No results published yet</h3>
+          <p>Your marks appear as soon as the registrar approves each subject.</p></div>
+      {% endif %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Today — {{ lessons.0.day|default:"" }}</h2></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for l in lessons %}
+        <div class="feed"><span class="dotic">{% icon 'clock' 15 %}</span>
+          <div><p><b>{{ l.subject.name|default:"Free period" }}</b></p>
+          <time>{{ l.start_time|time:"H:i" }}–{{ l.end_time|time:"H:i" }}{% if l.teacher %} · {{ l.teacher.name }}{% endif %}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">No lessons today. Check the timetable for the rest of the week.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="grid g-3">
+  <section class="panel">
+    <div class="panel-head"><h2>Next exams</h2></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for e in exams %}
+        <div class="feed"><span class="dotic">{% icon 'scroll' 15 %}</span>
+          <div><p><b>{{ e.name }}</b></p><time>{{ e.date|date:"d M Y" }} · {{ e.room }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">Nothing on the exam calendar for your grade.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Work due</h2></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for a in assignments %}
+        <div class="feed"><span class="dotic">{% icon 'pencil' 15 %}</span>
+          <div><p><b>{{ a.title }}</b></p><time>Due {{ a.due_date|date:"d M Y" }} · out of {{ a.max_mark }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">No assignments are outstanding for your class.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Notices</h2></div>
+    <div class="panel-body" style="padding-top:4px">
+      {% for a in notices %}
+        <div class="feed"><span class="dotic">{% icon 'mega' 15 %}</span>
+          <div style="min-width:0"><p><b>{{ a.title }}</b></p><time>{{ a.date|date:"d M Y" }}</time></div></div>
+      {% empty %}
+        <p style="color:var(--tx-3);font-size:13px">No notices right now.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}My results{% endblock %}
+
+{% block content %}
+{% if not student %}
+  <div class="page-head"><div><h1>My results</h1><p>Your account is not linked to a student record yet.</p></div></div>
+  <section class="panel"><div class="panel-body">
+    <div class="empty">{% icon 'user' 24 %}<h3>No student record</h3>
+      <p>Ask the registrar to link your login to your student profile. Your published results will appear here.</p></div>
+  </div></section>
+{% else %}
+<div class="page-head">
+  <div>
+    <h1>My results</h1>
+    <p>{{ student.school_class.name|default:"—" }} · {{ period.semester }}, {{ period.year }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn primary" href="{% url 'results:report_card' student.pk %}">{% icon 'print' 15 %} Report card</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Average" v=average|pct icon="award" trend="Published subjects only" %}
+  {% include 'includes/stat.html' with k="Subjects" v=subjects|length icon="book" tone="info" trend="Approved this semester" %}
+  {% include 'includes/stat.html' with k="Class rank" v=rank.rank|default:"—" icon="trend" tone="brass" trend="Within your section" %}
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h2>Published marks</h2><span class="sub">Only approved results are shown</span></div>
+  {% if subjects %}
+    <div class="tablewrap"><table class="dt">
+      <thead><tr><th>Subject</th><th>Exam</th><th class="num">Total</th><th class="num">%</th><th class="num">Grade</th><th>Remark</th></tr></thead>
+      <tbody>
+        {% for s in subjects %}
+          <tr>
+            <td><b>{{ s.subject }}</b></td>
+            <td>{{ s.exam_type }}</td>
+            <td class="num">{{ s.total|num }}</td>
+            <td class="num">{{ s.percentage|pct }}</td>
+            <td class="num"><b>{{ s.grade }}</b></td>
+            <td>{{ s.remark|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <div class="panel-body"><div class="empty">{% icon 'award' 24 %}<h3>No results published yet</h3>
+      <p>Your marks appear here as soon as the registrar approves each subject.</p></div></div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

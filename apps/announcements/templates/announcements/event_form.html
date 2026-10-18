@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ page_title }}</h1>
+    <p>Add the event type, date and location so it shows on the calendar.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'announcements:event_list' %}">{% icon 'right' 15 %} Back to events</a>
+  </div>
+</div>
+
+<section class="panel" style="max-width:780px">
+  <div class="panel-head"><h2>Event details</h2></div>
+  <div class="panel-body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="errorbox" style="margin-bottom:14px">{% icon 'warn' 15 %} {{ form.non_field_errors.0 }}</div>
+      {% endif %}
+      <div class="field" style="margin-bottom:14px">
+        <label for="{{ form.title.id_for_label }}">Title</label>
+        {{ form.title }}
+        {% if form.title.errors %}<span class="fielderr">{{ form.title.errors.0 }}</span>{% endif %}
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="{{ form.event_type.id_for_label }}">Type</label>
+          {{ form.event_type }}
+        </div>
+        <div class="field">
+          <label for="{{ form.date.id_for_label }}">Date</label>
+          {{ form.date }}
+          {% if form.date.errors %}<span class="fielderr">{{ form.date.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="field full">
+          <label for="{{ form.location.id_for_label }}">Location</label>
+          {{ form.location }}
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="{{ form.note.id_for_label }}">Note</label>
+        {{ form.note }}
+      </div>
+      <div style="display:flex;gap:9px;margin-top:16px">
+        <button class="btn primary" type="submit">{% icon 'check' 15 %} {% if mode == 'edit' %}Save changes{% else %}Add event{% endif %}</button>
+        <a class="btn ghost" href="{% url 'announcements:event_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

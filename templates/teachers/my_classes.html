@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}My classes{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>My classes</h1>
+    <p>{% if teacher %}The classes {{ teacher.name }} teaches this term.{% else %}No teacher profile is linked to your account.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'teachers:students' %}">{% icon 'users' 15 %} My students</a>
+  </div>
+</div>
+
+<div class="grid g-3">
+  {% for c in classes %}
+    <section class="panel">
+      <div class="panel-head"><h2>{{ c.klass.name }}</h2><span class="sub">{{ c.students }} student{{ c.students|pluralize }}</span></div>
+      <div class="panel-body">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+          {% for subject in c.subjects %}<span class="badge">{{ subject }}</span>{% empty %}<span style="color:var(--tx-3);font-size:13px">No subjects</span>{% endfor %}
+        </div>
+        <dl class="kv">
+          <dt>Room</dt><dd>{{ c.klass.room|default:"—" }}</dd>
+          <dt>Academic year</dt><dd>{{ c.klass.academic_year.name|default:"—" }}</dd>
+        </dl>
+        <a class="btn block" style="margin-top:14px" href="{% url 'teachers:students' %}?class={{ c.klass.pk }}">{% icon 'users' 15 %} View students</a>
+      </div>
+    </section>
+  {% empty %}
+    <section class="panel">
+      <div class="panel-body">
+        <div class="empty"><div class="ring">{% icon 'school' 22 %}</div><h3>No classes assigned</h3><p>You are not currently assigned to teach any class. Contact the registrar if this is unexpected.</p></div>
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

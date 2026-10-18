@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ sheet.subject.name }} — {{ sheet.school_class.name }}</h1>
+    <p>{{ sheet.semester.name }}, {{ sheet.academic_year.name }} · {{ sheet.exam_type }} · {% status_badge sheet.status %}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'results:list' %}">{% icon 'right' 15 %} Back to sheets</a>
+    <a class="btn" href="{% url 'results:sheet_detail' sheet.pk %}">{% icon 'eye' 15 %} Sheet summary</a>
+  </div>
+</div>
+
+{% if form.errors %}
+  <div class="note warn" style="margin-bottom:16px">{% icon 'warn' 17 %}
+    <div><b>Some marks could not be saved.</b><p style="margin:3px 0 0">Correct the highlighted fields and save again.</p></div>
+  </div>
+{% endif %}
+
+<form method="post" data-marks-sheet data-components="{{ components_json }}" data-bands="{{ bands_json }}">
+  {% csrf_token %}
+  <input type="hidden" name="sheet" value="{{ sheet.pk }}">
+
+  <section class="panel">
+    <div class="panel-head"><h2>Marks</h2><span class="sub">Total {{ max_total|num }} marks · {{ rows|length }} student{{ rows|length|pluralize }}</span></div>
+    <div class="panel-body">
+      <div class="tablewrap"><table class="dt">
+        <thead><tr>
+          <th>Student</th>
+          {% for c in components %}<th class="num">{{ c.label }}<div class="sub">/{{ c.max_score|num }}</div></th>{% endfor %}
+          <th class="num">Total</th><th class="num">Grade</th><th>Remark</th>
+        </tr></thead>
+        <tbody>
+          {% for row in rows %}
+            <tr data-mark-row>
+              <td><b>{{ row.student.full_name }}</b><div class="sub">{{ row.student.student_id }}</div></td>
+              {% for cell in row.cells %}
+                <td class="num">
+                  {{ cell.field }}
+                  {% if cell.field.errors %}<span class="fielderr">{{ cell.field.errors.0 }}</span>{% endif %}
+                </td>
+              {% endfor %}
+              <td class="num" data-row-total>{{ row.total|num }} ({{ row.percentage|pct }})</td>
+              <td class="num" data-row-grade>{{ row.grade }}</td>
+              <td>{{ row.remark }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="{{ components|length|add:4 }}">
+              <div class="empty">{% icon 'users' 24 %}<h3>No active students</h3>
+                <p>This class has no active students to mark.</p></div>
+            </td></tr>
+          {% endfor %}
+        </tbody>
+        {% if rows %}
+          <tfoot><tr><td colspan="{{ components|length|add:3 }}" class="num"><b>Out of {{ max_total|num }}</b></td><td colspan="2"></td></tr></tfoot>
+        {% endif %}
+      </table></div>
+    </div>
+  </section>
+
+  <div class="page-actions" style="margin-top:16px">
+    <button class="btn" type="submit" name="action" value="save">{% icon 'check' 15 %} Save draft</button>
+    <button class="btn primary" type="submit" name="action" value="submit">{% icon 'upload' 15 %} Submit for approval</button>
+  </div>
+</form>
+{% endblock %}

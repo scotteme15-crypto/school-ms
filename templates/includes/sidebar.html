@@ -1,0 +1,40 @@
+{% load ui %}
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="sidebar-head">
+    <div class="crest">
+      <div class="mark">{{ school.school_name|slice:":1"|upper }}</div>
+      <div>
+        <span class="wm">{{ school.school_name|truncatechars:22 }}</span>
+        <small>
+          {% if current_year %}{{ current_year.name }}{% endif %}
+          {% if current_semester %} · {{ current_semester.name }}{% endif %}
+        </small>
+      </div>
+    </div>
+    <button class="rowbtn no-print" id="closeNav" aria-label="Close navigation" style="color:#8FAEA3"></button>
+  </div>
+
+  <nav class="nav" id="nav">
+    {% for group in nav_groups %}
+      <div class="nav-group">{{ group.group }}</div>
+      {% for item in group.items %}
+        <a href="{{ item.url }}" class="{% if request.path == item.url %}on{% endif %}"
+           {% if request.path == item.url %}aria-current="page"{% endif %}>
+          {% icon item.icon 17 %}<span>{{ item.label }}</span>
+          {% if item.badge %}<span class="pill">{{ item.badge }}</span>{% endif %}
+        </a>
+      {% endfor %}
+    {% endfor %}
+  </nav>
+
+  <div class="sidebar-foot">
+    <button class="who" id="whoBtn" aria-haspopup="menu" aria-expanded="false">
+      <span class="avatar" id="whoAv">{{ user.display_name|initials }}</span>
+      <span style="min-width:0">
+        <b id="whoName">{{ user.display_name }}</b>
+        <span id="whoRole">{{ user.title|default:user.get_role_display }}</span>
+      </span>
+      {% icon 'downc' 16 %}
+    </button>
+  </div>
+</aside>

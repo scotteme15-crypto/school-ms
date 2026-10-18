@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Results{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Result sheets</h1>
+    <p>{% if is_admin %}Every class, subject and exam type across the school.{% else %}Enter and submit your marks for approval.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    {% if is_admin %}
+      <a class="btn primary" href="{% url 'results:approvals' %}">{% icon 'checkc' 15 %} Approval queue{% if counts.pending %} ({{ counts.pending }}){% endif %}</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Result sheets" v=counts.total icon="clip" trend="All exam types" %}
+  {% include 'includes/stat.html' with k="Pending review" v=counts.pending icon="clock" tone="warn" trend="Submitted for approval" %}
+  {% include 'includes/stat.html' with k="Published" v=counts.approved icon="checkc" tone="ok" trend="Visible to students" %}
+  {% include 'includes/stat.html' with k="Returned" v=counts.back icon="warn" tone="bad" trend="Needs correction" %}
+</div>
+
+<div class="grid g-32">
+  <section class="panel">
+    <div class="panel-head"><h2>{% if is_admin %}All result sheets{% else %}My result sheets{% endif %}</h2>
+      <span class="sub">{{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }}</span></div>
+    <div class="panel-body">
+      <form class="toolbar no-print" method="get" style="margin-bottom:12px">
+        <select name="status" data-autosubmit aria-label="Filter by status">
+          <option value="">All statuses</option>
+          {% for value, label in statuses %}
+            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="class" data-autosubmit aria-label="Filter by class">
+          <option value="">All classes</option>
+          {% for c in classes %}
+            <option value="{{ c.pk }}" {% if filters.class_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+        <select name="subject" data-autosubmit aria-label="Filter by subject">
+          <option value="">All subjects</option>
+          {% for s in subjects %}
+            <option value="{{ s.pk }}" {% if filters.subject_id == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn sm" type="submit">{% icon 'filter' 14 %} Filter</button>
+      </form>
+
+      <div class="tablewrap"><table class="dt">
+        <thead><tr>
+          <th>Subject · class</th><th>Exam</th>{% if is_admin %}<th>Teacher</th>{% endif %}
+          <th>Status</th><th class="num">Marks</th><th>Updated</th><th class="num">Actions</th>
+        </tr></thead>
+        <tbody>
+          {% for r in sheets %}
+            <tr>
+              <td><b>{{ r.subject.name }}</b><div class="sub">{{ r.school_class.name }} · {{ r.semester.name }}</div></td>
+              <td>{{ r.exam_type }}</td>
+              {% if is_admin %}<td>{{ r.teacher.name }}</td>{% endif %}
+              <td>{% status_badge r.status %}</td>
+              <td class="num">{{ r.marks.count }}</td>
+              <td>{{ r.updated_at|date:"d M Y" }}</td>
+              <td class="num" style="white-space:nowrap">
+                <a class="btn sm ghost" href="{% url 'results:sheet_detail' r.pk %}">{% icon 'eye' 14 %} Open</a>
+                {% if r.is_editable and not is_admin %}
+                  <a class="btn sm" href="{% url 'results:entry' %}?sheet={{ r.pk }}">{% icon 'pencil' 14 %} Marks</a>
+                {% endif %}
+                {% if is_admin or r.is_editable %}
+                  <form method="post" action="{% url 'results:delete' r.pk %}" style="display:inline"
+                        data-confirm="Delete this result sheet and all its marks? This cannot be undone."
+                        data-confirm-title="Delete result sheet" data-confirm-action="Delete">
+                    {% csrf_token %}
+                    <button class="btn sm danger" type="submit">{% icon 'trash' 14 %}</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="{% if is_admin %}7{% else %}6{% endif %}">
+              <div class="empty">{% icon 'clip' 24 %}<h3>No result sheets yet</h3>
+                <p>{% if is_admin %}Sheets appear here once teachers create them.{% else %}Create your first sheet from the panel on the right.{% endif %}</p></div>
+            </td></tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+
+      {% include 'includes/pagination.html' with page_obj=page_obj %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>New result sheet</h2><span class="sub">Starts as a draft</span></div>
+    <div class="panel-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="field" style="margin-bottom:12px">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+          </div>
+        {% endfor %}
+        <button class="btn primary block" type="submit">{% icon 'plus' 15 %} Create sheet</button>
+      </form>
+      <div class="note info" style="margin-top:14px">{% icon 'info' 16 %}
+        <div><b>Workflow</b><p style="margin:3px 0 0">Save as draft, submit for approval, then the registrar approves or returns it. Students only see approved marks.</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Announcements{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Announcements</h1>
+    <p>Notices published for the school, filtered to what concerns you.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'announcements:event_list' %}">{% icon 'cal' 15 %} Events calendar</a>
+    {% if can_manage %}
+      <a class="btn primary" href="{% url 'announcements:create' %}">{% icon 'plus' 15 %} New announcement</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel" style="margin-bottom:16px">
+  <form class="toolbar" method="get">
+    <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+      <label for="priority">Priority</label>
+      <select id="priority" name="priority" onchange="this.form.submit()">
+        <option value="">All</option>
+        <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High</option>
+        <option value="Normal" {% if priority_filter == 'Normal' %}selected{% endif %}>Normal</option>
+        <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
+      </select>
+    </div>
+    <noscript><button class="btn sm" type="submit">Filter</button></noscript>
+    <span class="sub" style="margin-left:auto">{{ page_obj.paginator.count }} notice{{ page_obj.paginator.count|pluralize }}</span>
+  </form>
+</section>
+
+{% for a in page_obj %}
+<section class="panel" style="margin-bottom:16px">
+  <div class="panel-head">
+    <h2>{{ a.title }}</h2>
+    <span class="badge">{{ a.audience }}</span>
+    {% if a.priority == 'High' %}<span class="badge bad"><span class="d"></span>High</span>
+    {% elif a.priority == 'Low' %}<span class="badge info">Low</span>
+    {% else %}<span class="badge">Normal</span>{% endif %}
+    <div class="right">
+      {% if can_manage %}
+        <a class="btn sm ghost" href="{% url 'announcements:edit' a.pk %}">{% icon 'edit' 13 %} Edit</a>
+        <form method="post" action="{% url 'announcements:delete' a.pk %}" style="margin:0">
+          {% csrf_token %}
+          <button class="btn sm danger" type="submit" onclick="return confirm('Delete this announcement?')">{% icon 'trash' 13 %}</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="panel-body">
+    <p style="white-space:pre-line;margin:0 0 10px">{{ a.body }}</p>
+    <time style="font-size:12.5px;color:var(--tx-3)">{{ a.date|date:"d M Y" }}{% if a.author %} · {{ a.author.display_name }}{% endif %}</time>
+  </div>
+</section>
+{% empty %}
+<section class="panel">
+  <div class="panel-body">
+    <div class="empty">
+      {% icon 'mega' 24 %}
+      <h3>No announcements</h3>
+      <p>{% if can_manage %}Publish the first notice for the school.{% else %}There is nothing to read right now.{% endif %}</p>
+      {% if can_manage %}<a class="btn primary" href="{% url 'announcements:create' %}">{% icon 'plus' 15 %} New announcement</a>{% endif %}
+    </div>
+  </div>
+</section>
+{% endfor %}
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

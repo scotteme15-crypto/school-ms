@@ -1,0 +1,12 @@
+{% load ui %}
+{# Hidden markup the client script clones into a popover. Kept in a template so #}
+{# the links stay server-generated ({% url %}) and never drift from the routes. #}
+<div id="profileMenuData" hidden>
+  <a class="menu-item" href="{% url 'accounts:profile' %}">{% icon 'user' 15 %} My profile</a>
+  <a class="menu-item" href="{% url 'accounts:password_change' %}">{% icon 'lock' 15 %} Change password</a>
+  <a class="menu-item" href="{% url 'notifications:list' %}">{% icon 'bell' 15 %} Notifications</a>
+  <form method="post" action="{% url 'accounts:logout' %}" style="margin:0">
+    {% csrf_token %}
+    <button class="menu-item" type="submit" style="color:var(--bad)">{% icon 'out' 15 %} Sign out</button>
+  </form>
+</div>

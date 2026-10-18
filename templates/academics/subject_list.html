@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Subjects{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>Subjects</h1><p>The curriculum offered across every grade, with department and teacher.</p></div>
+  <div class="page-actions">
+    {% if user.is_admin_role or user.is_superuser %}
+      <a class="btn primary" href="{% url 'academics:subject_create' %}">{% icon 'plus' 15 %} New subject</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="panel">
+  <form class="toolbar" method="get">
+    <div class="search-inp">{% icon 'search' 15 %}<input type="search" name="q" value="{{ q }}" placeholder="Search by name or code…"></div>
+    <div class="field" style="min-width:150px">
+      <select name="grade">
+        <option value="">All grades</option>
+        {% for value, label in grade_choices %}
+          <option value="{{ value }}" {% if grade == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="min-width:170px">
+      <select name="department">
+        <option value="">All departments</option>
+        {% for d in departments %}<option value="{{ d }}" {% if department == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn sm primary" type="submit">{% icon 'filter' 14 %} Filter</button>
+    {% if q or grade or department %}<a class="btn sm ghost" href="{% url 'academics:subject_list' %}">{% icon 'x' 14 %} Clear</a>{% endif %}
+  </form>
+
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr><th>Subject</th><th>Code</th><th>Grade</th><th>Department</th><th>Teacher</th><th>Status</th><th class="acts">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for s in page_obj %}
+          <tr>
+            <td><div class="idcell">{% avatar s.name %}<div><b>{{ s.name }}</b><span>{{ s.credit }} credits</span></div></div></td>
+            <td>{{ s.full_code }}</td>
+            <td>Grade {{ s.grade }}</td>
+            <td>{{ s.department }}</td>
+            <td>{{ s.teacher.name|default:"Unassigned" }}</td>
+            <td>{% if s.is_active %}{% status_badge 'approved' %}{% else %}{% status_badge 'rejected' %}{% endif %}</td>
+            <td class="acts">
+              {% if user.is_admin_role or user.is_superuser %}
+                <a class="rowbtn" href="{% url 'academics:subject_edit' s.pk %}" title="Edit">{% icon 'edit' 15 %}</a>
+                <a class="rowbtn del" href="{% url 'academics:subject_delete' s.pk %}" title="Delete">{% icon 'trash' 15 %}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="empty"><div class="ring">{% icon 'book' 22 %}</div><h3>No subjects found</h3><p>Add a subject to build the curriculum.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include 'includes/pagination.html' %}
+</section>
+{% endblock %}

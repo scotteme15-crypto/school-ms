@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Analytics</h1>
+    <p>{{ year.name|default:"—" }}, {{ semester.name|default:"—" }} · whole-school performance at a glance.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'reports:index' %}">{% icon 'file' 15 %} Reports</a>
+  </div>
+</div>
+
+<div class="grid g-4 stats" style="margin-bottom:16px">
+  {% include 'includes/stat.html' with k="Active students" v=totals.students icon="users" trend="Enrolled this year" %}
+  {% include 'includes/stat.html' with k="Published marks" v=totals.marks icon="clip" tone="info" trend="Approved sheets only" %}
+  {% include 'includes/stat.html' with k="Pass rate" v=totals.pass_rate|pct icon="checkc" tone="ok" trend="Against the pass mark" %}
+  {% include 'includes/stat.html' with k="Students passing" v=totals.pass icon="award" tone="brass" trend="Failed: see donut" %}
+</div>
+
+<div class="grid g-2" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Enrolment by grade</h2><span class="sub">Active students only</span></div>
+    <div class="panel-body"><div data-chart="{{ enrol_json }}" data-chart-type="bar" data-chart-height="215"></div></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Average score by grade</h2><span class="sub">Approved results</span></div>
+    <div class="panel-body"><div data-chart="{{ perf_json }}" data-chart-type="bar" data-chart-height="215" data-chart-unit="%"></div></div>
+  </section>
+</div>
+
+<div class="grid g-2" style="margin-bottom:16px">
+  <section class="panel">
+    <div class="panel-head"><h2>Subject performance</h2><span class="sub">Average score per subject</span></div>
+    <div class="panel-body">
+      {% if subjects %}
+        <div data-chart="{{ subject_json }}" data-chart-type="hbars"></div>
+      {% else %}
+        <p style="color:var(--tx-3);font-size:13px">No published marks yet.</p>
+      {% endif %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><h2>Pass / fail rate</h2><span class="sub">Across published marks</span></div>
+    <div class="panel-body">
+      <div data-chart="{{ pass_json }}" data-chart-type="donut"></div>
+      <div class="legend">
+        {% for s in pass_segments %}<span><i style="background:{{ s.color }}"></i>{{ s.label }} · {{ s.value }}</span>{% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="panel" style="margin-bottom:16px">
+  <div class="panel-head"><h2>Attendance trend</h2><span class="sub">Whole school, last 10 registers</span></div>
+  <div class="panel-body"><div data-chart="{{ trend_json }}" data-chart-type="line" data-chart-height="230" data-chart-unit="%"></div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Subject breakdown</h2><span class="sub">Average, count and pass rate</span></div>
+  <div class="tablewrap">
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th class="num">Marks</th>
+          <th class="num">Average</th>
+          <th class="num">Pass rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in subjects %}
+          <tr>
+            <td><b>{{ row.subject.name }}</b> <span class="badge">Grade {{ row.subject.grade }}</span></td>
+            <td class="num">{{ row.count }}</td>
+            <td class="num">{{ row.average|pct }}</td>
+            <td class="num">{{ row.pass_rate|pct }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" style="text-align:center;color:var(--tx-3)">No published marks yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

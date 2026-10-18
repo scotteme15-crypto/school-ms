@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{% if is_edit %}Edit semester{% else %}New semester{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div><h1>New semester</h1><p>Add a term to an academic year.</p></div>
+  <div class="page-actions">
+    <a class="btn ghost" href="{% url 'academics:semester_list' %}">{% icon 'x' 15 %} Cancel</a>
+  </div>
+</div>
+
+<section class="panel" style="max-width:720px">
+  <div class="panel-head"><h2>Semester details</h2></div>
+  <div class="panel-body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="note warn" style="margin-bottom:14px">{% icon 'warn' 16 %} {{ form.non_field_errors.0 }}</div>{% endif %}
+      <div class="grid g-2">
+        {% for field in form %}
+          {% if field.field.widget.input_type == 'checkbox' %}
+            <div class="field" style="flex-direction:row;align-items:center;gap:9px;grid-column:1/-1">
+              {{ field }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            </div>
+          {% else %}
+            <div class="field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<span class="fielderr">{{ field.errors.0 }}</span>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div style="display:flex;gap:9px;margin-top:18px">
+        <button class="btn primary" type="submit">{% icon 'check' 15 %} Create semester</button>
+        <a class="btn ghost" href="{% url 'academics:semester_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
